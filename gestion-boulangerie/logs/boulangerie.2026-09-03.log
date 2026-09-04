@@ -1,0 +1,110 @@
+2026-09-03 17:19:55 [main] INFO  com.boulangerie.Main - Connexion MySQL établie.
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'role'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'role'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'famille'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'produit'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'produit'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'categorie_client'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'client'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'client'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'client'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'fiche_journaliere'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'facture'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'versement'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'client'
+2026-09-03 17:19:55 [main] WARN  c.b.util.DatabaseInitializer - Initialisation SQL: Failed to open the referenced table 'utilisateur'
+2026-09-03 17:19:55 [main] INFO  c.b.util.DatabaseInitializer - Initialisation de la base de données terminée.
+2026-09-03 17:19:56 [AWT-EventQueue-0] INFO  com.boulangerie.Main - Application Gestion Boulangerie démarrée.
+2026-09-03 17:20:17 [SwingWorker-pool-1-thread-1] ERROR com.boulangerie.dao.UtilisateurDAO - findByLogin admin
+java.sql.SQLSyntaxErrorException: Table 'boulangerie.utilisateur' doesn't exist
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:121)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeQuery(ClientPreparedStatement.java:968)
+	at com.boulangerie.dao.UtilisateurDAO.findByLogin(UtilisateurDAO.java:28)
+	at com.boulangerie.service.AuthService.connecter(AuthService.java:24)
+	at com.boulangerie.ui.LoginFrame$1.doInBackground(LoginFrame.java:142)
+	at com.boulangerie.ui.LoginFrame$1.doInBackground(LoginFrame.java:139)
+	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-03 17:20:17 [SwingWorker-pool-1-thread-1] ERROR com.boulangerie.dao.AuditDAO - Erreur journalisation audit
+java.sql.SQLSyntaxErrorException: Table 'boulangerie.journal_audit' doesn't exist
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:121)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.AuditDAO.log(AuditDAO.java:34)
+	at com.boulangerie.service.AuthService.connecter(AuthService.java:26)
+	at com.boulangerie.ui.LoginFrame$1.doInBackground(LoginFrame.java:142)
+	at com.boulangerie.ui.LoginFrame$1.doInBackground(LoginFrame.java:139)
+	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-03 17:20:29 [SwingWorker-pool-1-thread-2] ERROR com.boulangerie.dao.UtilisateurDAO - findByLogin admin
+java.sql.SQLSyntaxErrorException: Table 'boulangerie.utilisateur' doesn't exist
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:121)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeQuery(ClientPreparedStatement.java:968)
+	at com.boulangerie.dao.UtilisateurDAO.findByLogin(UtilisateurDAO.java:28)
+	at com.boulangerie.service.AuthService.connecter(AuthService.java:24)
+	at com.boulangerie.ui.LoginFrame$1.doInBackground(LoginFrame.java:142)
+	at com.boulangerie.ui.LoginFrame$1.doInBackground(LoginFrame.java:139)
+	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-03 17:20:29 [SwingWorker-pool-1-thread-2] ERROR com.boulangerie.dao.AuditDAO - Erreur journalisation audit
+java.sql.SQLSyntaxErrorException: Table 'boulangerie.journal_audit' doesn't exist
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:121)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.AuditDAO.log(AuditDAO.java:34)
+	at com.boulangerie.service.AuthService.connecter(AuthService.java:26)
+	at com.boulangerie.ui.LoginFrame$1.doInBackground(LoginFrame.java:142)
+	at com.boulangerie.ui.LoginFrame$1.doInBackground(LoginFrame.java:139)
+	at java.desktop/javax.swing.SwingWorker$1.call(SwingWorker.java:305)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.desktop/javax.swing.SwingWorker.run(SwingWorker.java:342)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-03 17:27:03 [main] INFO  com.boulangerie.Main - Connexion MySQL établie.
+2026-09-03 17:27:03 [main] INFO  c.b.util.DatabaseInitializer - Initialisation de la base de données terminée.
+2026-09-03 17:27:04 [AWT-EventQueue-0] INFO  com.boulangerie.Main - Application Gestion Boulangerie démarrée.
+2026-09-03 17:29:15 [main] INFO  com.boulangerie.Main - Connexion MySQL établie.
+2026-09-03 17:29:15 [main] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-03 17:29:17 [AWT-EventQueue-0] INFO  com.boulangerie.Main - Application Gestion Boulangerie démarrée.
+2026-09-03 17:41:23 [main] INFO  com.boulangerie.Main - Connexion MySQL établie.
+2026-09-03 17:41:23 [main] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-03 17:41:24 [AWT-EventQueue-0] INFO  com.boulangerie.Main - Application Gestion Boulangerie démarrée.
+2026-09-03 17:41:34 [SwingWorker-pool-1-thread-1] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-03 18:31:21 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-03 18:31:21 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-03 18:31:22 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-03 18:31:54 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-03 18:33:24 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-03 18:35:14 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-03 18:35:14 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-03 18:35:15 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-03 18:35:35 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-03 18:46:19 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-03 18:46:19 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-03 18:46:20 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-03 18:46:32 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)

@@ -1,0 +1,335 @@
+/* ============================================================
+   Gestion Boulangerie — Feuille de styles globale
+   Compatible AtlantaFX PrimerLight
+   ============================================================ */
+
+/* ── Variables de couleurs ───────────────────────────────── */
+.root {
+    -color-accent-fg:       #1267C4;
+    -color-accent-emphasis: #0B4D93;
+    -color-success-fg:      #0F9D58;
+    -color-danger-fg:       #D93025;
+    -color-warning-fg:      #F29900;
+
+    -app-bg:          #F3F6FA;
+    -app-border:      #D7E0EA;
+    -app-text-muted:  #536477;
+    -app-white:       #FFFFFF;
+    -app-navy:        #082B57;
+    -app-yellow:      #FBC02D;
+    -app-brown:       #7A442D;
+    -app-blue-light:  #E7F1FC;
+    -app-card-shadow: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 2);
+}
+
+/* ── Fond général ────────────────────────────────────────── */
+.main-container {
+    -fx-background-color: -app-bg;
+}
+
+/* ── Carte blanche avec ombre ────────────────────────────── */
+.card {
+    -fx-background-color: -app-white;
+    -fx-background-radius: 8;
+    -fx-border-color: -app-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-effect: -app-card-shadow;
+    -fx-padding: 16;
+}
+
+/* ── Barre de navigation ─────────────────────────────────── */
+.nav-bar {
+    -fx-background-color: -app-navy;
+    -fx-border-color: transparent transparent #061E3D transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-pref-height: 52;
+    -fx-min-height: 52;
+    -fx-max-height: 52;
+}
+
+.nav-logo {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-padding: 0 16 0 10;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #EAF2FC;
+    -fx-font-size: 13px;
+    -fx-padding: 0 10 0 10;
+    -fx-pref-height: 52;
+    -fx-background-radius: 0;
+    -fx-border-width: 0 0 2 0;
+    -fx-border-color: transparent;
+    -fx-cursor: hand;
+}
+.nav-button:hover {
+    -fx-text-fill: white;
+    -fx-background-color: #0D417E;
+}
+.nav-button.active {
+    -fx-text-fill: #082B57;
+    -fx-border-color: transparent transparent -app-yellow transparent;
+    -fx-background-color: -app-yellow;
+    -fx-font-weight: bold;
+}
+
+/* ── Barre de statut ─────────────────────────────────────── */
+.status-bar {
+    -fx-background-color: -app-bg;
+    -fx-border-color: -app-border transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-pref-height: 28;
+    -fx-padding: 0 14 0 14;
+    -fx-font-size: 11px;
+    -fx-text-fill: -app-text-muted;
+}
+
+/* ── Login ───────────────────────────────────────────────── */
+.login-root {
+    -fx-background-color: -app-bg;
+}
+
+.login-logo-icon {
+    -fx-icon-color: -app-yellow;
+    -fx-icon-size: 90px;
+}
+
+.login-btn-filled {
+    -fx-background-color: #1267C4;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-pref-height: 44;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(18,103,196,0.35), 8, 0, 0, 3);
+}
+.login-btn-filled:hover {
+    -fx-background-color: #0B4D93;
+    -fx-effect: dropshadow(gaussian, rgba(18,103,196,0.50), 12, 0, 0, 4);
+}
+.login-btn-filled:pressed {
+    -fx-background-color: #082B57;
+    -fx-effect: none;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+.login-btn-filled:disabled {
+    -fx-background-color: #8AB8E8;
+    -fx-effect: none;
+}
+
+/* Séparateur entre logo et formulaire */
+.section-divider {
+    -fx-background-color: -app-border;
+    -fx-pref-height: 1;
+    -fx-max-height: 1;
+    -fx-min-height: 1;
+    -fx-max-width: Infinity;
+}
+
+.login-error {
+    -fx-text-fill: #D93025;
+    -fx-font-size: 12px;
+    -fx-background-color: #FCE8E6;
+    -fx-background-radius: 6;
+    -fx-padding: 6 10;
+}
+
+.login-info {
+    -fx-text-fill: -app-text-muted;
+    -fx-font-size: 11px;
+}
+
+/* ── KPI Cards (Dashboard) ───────────────────────────────── */
+.kpi-card {
+    -fx-background-color: white;
+    -fx-background-radius: 8;
+    -fx-border-color: -app-border;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-effect: -app-card-shadow;
+    -fx-padding: 14 16 14 16;
+}
+
+.kpi-title {
+    -fx-font-size: 11px;
+    -fx-text-fill: -app-text-muted;
+}
+
+.kpi-value {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #202124;
+}
+
+.kpi-variation-pos {
+    -fx-font-size: 11px;
+    -fx-text-fill: -color-success-fg;
+}
+
+.kpi-variation-neg {
+    -fx-font-size: 11px;
+    -fx-text-fill: -color-danger-fg;
+}
+
+/* ── Titres de section ───────────────────────────────────── */
+.section-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #202124;
+}
+
+.subsection-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #202124;
+}
+
+/* ── TableView ───────────────────────────────────────────── */
+.styled-table {
+    -fx-font-size: 13px;
+}
+
+.styled-table .column-header {
+    -fx-background-color: -app-bg;
+    -fx-font-weight: bold;
+    -fx-text-fill: -app-text-muted;
+    -fx-font-size: 12px;
+    -fx-border-color: transparent transparent -app-border transparent;
+    -fx-border-width: 0 0 2 0;
+}
+
+.styled-table .table-row-cell:odd {
+    -fx-background-color: #F8F9FA;
+}
+.styled-table .table-row-cell:even {
+    -fx-background-color: white;
+}
+.styled-table .table-row-cell:selected {
+    -fx-background-color: -app-blue-light;
+    -fx-text-fill: #202124;
+}
+.styled-table .table-row-cell {
+    -fx-table-cell-border-color: -app-border;
+    -fx-pref-height: 32;
+}
+
+/* ── Badges de statut ────────────────────────────────────── */
+.badge {
+    -fx-padding: 2 10 2 10;
+    -fx-background-radius: 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+.badge-success  { -fx-background-color: #0F9D58; }
+.badge-danger   { -fx-background-color: #D93025; }
+.badge-warning  { -fx-background-color: #F29900; }
+.badge-info     { -fx-background-color: #1A73E8; }
+.badge-muted    { -fx-background-color: #9AA0A6; }
+.badge-purple   { -fx-background-color: #9334E6; }
+
+/* ── Boutons personnalisés ───────────────────────────────── */
+.btn-icon {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-cursor: hand;
+    -fx-font-size: 15px;
+}
+
+/* ── Champ de recherche ──────────────────────────────────── */
+.search-field {
+    -fx-pref-height: 32;
+    -fx-pref-width: 220;
+    -fx-font-size: 13px;
+}
+
+/* ── Alertes ─────────────────────────────────────────────── */
+.alert-panel-danger {
+    -fx-background-color: #FCE8E6;
+    -fx-border-color: #D93025;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-border-width: 1;
+    -fx-padding: 10 14 10 14;
+}
+
+.alert-panel-warning {
+    -fx-background-color: #FEF7E0;
+    -fx-border-color: #F29900;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-border-width: 1;
+    -fx-padding: 10 14 10 14;
+}
+
+.alert-panel-info {
+    -fx-background-color: #E8F0FE;
+    -fx-border-color: #1A73E8;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-border-width: 1;
+    -fx-padding: 10 14 10 14;
+}
+
+/* ── Panneau de contenu principal ────────────────────────── */
+.content-panel {
+    -fx-background-color: -app-bg;
+    -fx-padding: 20;
+}
+
+.section-divider {
+    -fx-pref-height: 1;
+    -fx-min-height: 1;
+    -fx-max-height: 1;
+    -fx-background-color: -app-border;
+}
+
+.dashboard-card {
+    -fx-background-color: white;
+    -fx-background-radius: 10;
+    -fx-border-color: -app-border;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 14;
+    -fx-effect: -app-card-shadow;
+}
+
+.shortcut-button {
+    -fx-background-color: #E7F1FC;
+    -fx-text-fill: #0B4D93;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
+    -fx-content-display: top;
+    -fx-graphic-text-gap: 7;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+}
+.shortcut-button:hover {
+    -fx-background-color: -color-accent-fg;
+    -fx-text-fill: white;
+}
+.shortcut-icon { -fx-icon-size: 20px; }
+
+/* ── Séparateur ──────────────────────────────────────────── */
+.separator-muted {
+    -fx-background-color: -app-border;
+}
+
+/* ── Label muted ─────────────────────────────────────────── */
+.text-muted {
+    -fx-text-fill: -app-text-muted;
+    -fx-font-size: 11px;
+}
+
+.text-success { -fx-text-fill: #0F9D58; }
+.text-danger  { -fx-text-fill: #D93025; }
+.text-warning { -fx-text-fill: #F29900; }
+.text-primary { -fx-text-fill: #1A73E8; }

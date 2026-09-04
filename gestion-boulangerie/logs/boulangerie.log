@@ -1,0 +1,73 @@
+2026-09-04 09:00:36 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 09:00:36 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 09:00:39 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 09:02:07 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 09:29:23 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 09:29:23 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 09:29:28 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 09:29:47 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 09:35:39 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 09:35:40 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 09:35:42 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 09:39:48 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 09:39:48 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 09:39:50 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 09:40:06 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 10:02:19 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 10:02:19 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 10:02:23 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 10:02:47 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 10:04:41 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 10:04:42 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 10:16:28 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: ravel1 (LIVREUR)
+2026-09-04 10:16:44 [fx-panel-worker] ERROR c.b.dao.FicheJournaliereDAO - save fiche
+java.sql.SQLException: Data truncated for column 'statut' at row 1
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:130)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.FicheJournaliereDAO.save(FicheJournaliereDAO.java:101)
+	at com.boulangerie.ui.fx.SortiesFxPanel.lambda$nouvelleFiche$16(SortiesFxPanel.java:114)
+	at com.boulangerie.ui.fx.FxPanelBase.lambda$runAsync$3(FxPanelBase.java:193)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-04 10:16:49 [fx-panel-worker] ERROR c.b.dao.FicheJournaliereDAO - save fiche
+java.sql.SQLException: Data truncated for column 'statut' at row 1
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:130)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.FicheJournaliereDAO.save(FicheJournaliereDAO.java:101)
+	at com.boulangerie.ui.fx.SortiesFxPanel.lambda$nouvelleFiche$16(SortiesFxPanel.java:114)
+	at com.boulangerie.ui.fx.FxPanelBase.lambda$runAsync$3(FxPanelBase.java:193)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-04 10:25:20 [fx-panel-worker] ERROR c.b.dao.FicheJournaliereDAO - save fiche
+java.sql.SQLException: Data truncated for column 'statut' at row 1
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:130)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.FicheJournaliereDAO.save(FicheJournaliereDAO.java:101)
+	at com.boulangerie.ui.fx.SortiesFxPanel.lambda$nouvelleFiche$16(SortiesFxPanel.java:114)
+	at com.boulangerie.ui.fx.FxPanelBase.lambda$runAsync$3(FxPanelBase.java:193)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
