@@ -37,6 +37,7 @@
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/ClotureService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/DeblocageService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/FacturationService.java
+/home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/LoginAttemptService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/PdfService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/SessionService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/TarifService.java

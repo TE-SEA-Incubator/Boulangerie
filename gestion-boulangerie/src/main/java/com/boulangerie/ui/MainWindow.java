@@ -63,13 +63,13 @@ public class MainWindow {
 
     private static final List<NavItem> NAV_ITEMS = List.of(
         new NavItem("Tableau de bord", DASHBOARD, null, BootstrapIcons.GRID_1X2_FILL),
-        new NavItem("Produits", PRODUITS, "PRODUIT_READ", BootstrapIcons.BOX_SEAM_FILL),
+        new NavItem("Produits", PRODUITS, "PRODUIT_READ", BootstrapIcons.BOX_SEAM),
         new NavItem("Clients", CLIENTS, "CLIENT_READ", BootstrapIcons.PEOPLE_FILL),
         new NavItem("Sorties", SORTIES, "SORTIE_READ", BootstrapIcons.JOURNAL_TEXT),
-        new NavItem("Facturation", FACTURATION, "FACTURATION_READ", BootstrapIcons.RECEIPT_CUTTOFF),
+        new NavItem("Facturation", FACTURATION, "FACTURATION_READ", BootstrapIcons.RECEIPT_CUTOFF),
         new NavItem("Caisse", CAISSE, "CAISSE_READ", BootstrapIcons.CASH_STACK),
         new NavItem("Recouvrement", RECOUVREMENT, "RECOUVREMENT_READ", BootstrapIcons.BAR_CHART_FILL),
-        new NavItem("Utilisateurs", UTILISATEURS, "USER_WRITE", BootstrapIcons.PERSON_GEAR),
+        new NavItem("Utilisateurs", UTILISATEURS, "USER_WRITE", BootstrapIcons.PEOPLE_FILL),
         new NavItem("Rapports", RAPPORTS, "RAPPORT_READ", BootstrapIcons.FILE_EARMARK_BAR_GRAPH_FILL),
         new NavItem("Audit", AUDIT, "AUDIT_READ", BootstrapIcons.SHIELD_CHECK),
         new NavItem("Paramètres", PARAMETRES, "CLOTURE_WRITE", BootstrapIcons.GEAR_FILL)

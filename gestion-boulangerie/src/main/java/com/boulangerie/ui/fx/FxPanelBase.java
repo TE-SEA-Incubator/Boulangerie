@@ -230,7 +230,7 @@ public abstract class FxPanelBase implements FxPanel {
         Label l = new Label(text);
         l.setStyle("-fx-font-size:13px;");
         l.setWrapText(false);
-        l.setMinWidth(USE_PREF_SIZE);
+        l.setMinWidth(Label.USE_PREF_SIZE);
         return l;
     }
 
