@@ -93,6 +93,65 @@
     -fx-background-color: -app-bg;
 }
 
+.login-brand-panel {
+    -fx-background-color: linear-gradient(to bottom right, #082B57, #1267C4);
+}
+
+.login-form-panel {
+    -fx-background-color: #F3F6FA;
+}
+
+.login-card {
+    -fx-background-color: white;
+    -fx-background-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 20, 0, 0, 4);
+    -fx-padding: 40 44 40 44;
+}
+
+.login-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #082B57;
+}
+
+.login-subtitle {
+    -fx-font-size: 12px;
+    -fx-text-fill: #536477;
+}
+
+.login-brand-title {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.login-brand-subtitle {
+    -fx-font-size: 16px;
+    -fx-text-fill: #EAF2FC;
+    -fx-font-style: italic;
+}
+
+.login-version {
+    -fx-text-fill: #5B8FC2;
+    -fx-font-size: 11px;
+}
+
+.login-field-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-text-fill: #082B57;
+}
+
+.login-input {
+    -fx-font-size: 13px;
+    -fx-pref-height: 40;
+}
+
+.login-hint {
+    -fx-font-size: 11px;
+    -fx-text-fill: #536477;
+}
+
 .login-logo-icon {
     -fx-icon-color: -app-yellow;
     -fx-icon-size: 90px;
@@ -144,6 +203,33 @@
 .login-info {
     -fx-text-fill: -app-text-muted;
     -fx-font-size: 11px;
+}
+
+.login-progress {
+    -fx-progress-color: -color-accent-fg;
+}
+
+.login-quick-info {
+    -fx-padding: 6 0 2 0;
+}
+
+.login-quick-info-item {
+    -fx-background-color: #F7F9FC;
+    -fx-background-radius: 10;
+    -fx-border-color: #D7E0EA;
+    -fx-border-radius: 10;
+    -fx-padding: 10;
+}
+
+.login-quick-info-title {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #082B57;
+}
+
+.login-quick-info-value {
+    -fx-font-size: 11px;
+    -fx-text-fill: #536477;
 }
 
 /* ── KPI Cards (Dashboard) ───────────────────────────────── */

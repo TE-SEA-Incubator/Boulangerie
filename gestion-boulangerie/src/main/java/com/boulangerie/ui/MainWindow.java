@@ -7,9 +7,11 @@ import com.boulangerie.ui.fx.*;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -40,6 +42,7 @@ public class MainWindow {
 
     // Cache lazy des panels
     private final Map<String, FxPanel> panelCache = new HashMap<>();
+    private final Map<String, Button> navButtons = new HashMap<>();
 
     private StackPane contentArea;
     private Label     lblHeure;
@@ -58,50 +61,19 @@ public class MainWindow {
     public static final String AUDIT        = "AUDIT";
     public static final String PARAMETRES   = "PARAMETRES";
 
-    /**
-     * Menus visibles par rôle (CDC §3.1 Matrice des droits)
-     * Format : { label, card, permission_requise_ou_null }
-     */
-    private static final Map<String, List<String[]>> MENUS_PAR_ROLE = new LinkedHashMap<>();
-
-    static {
-        // ADMIN — accès complet
-        MENUS_PAR_ROLE.put("ADMIN", Arrays.asList(
-            new String[]{"🏠 Dashboard",    DASHBOARD,    null},
-            new String[]{"📦 Produits",     PRODUITS,     null},
-            new String[]{"👥 Clients",      CLIENTS,      null},
-            new String[]{"📋 Sorties",      SORTIES,      null},
-            new String[]{"🧾 Facturation",  FACTURATION,  null},
-            new String[]{"💰 Caisse",       CAISSE,       null},
-            new String[]{"📊 Recouvrement", RECOUVREMENT, null},
-            new String[]{"👤 Utilisateurs", UTILISATEURS, null},
-            new String[]{"📄 Rapports",     RAPPORTS,     null},
-            new String[]{"🔍 Audit",        AUDIT,        null},
-            new String[]{"⚙ Paramètres",   PARAMETRES,   null}
-        ));
-        // COMPTABLE — suivi financier
-        MENUS_PAR_ROLE.put("COMPTABLE", Arrays.asList(
-            new String[]{"🏠 Dashboard",    DASHBOARD,    null},
-            new String[]{"👥 Clients",      CLIENTS,      null},
-            new String[]{"🧾 Facturation",  FACTURATION,  null},
-            new String[]{"📊 Recouvrement", RECOUVREMENT, null},
-            new String[]{"📄 Rapports",     RAPPORTS,     null},
-            new String[]{"🔍 Audit",        AUDIT,        null}
-        ));
-        // CAISSIER — encaissements
-        MENUS_PAR_ROLE.put("CAISSIER", Arrays.asList(
-            new String[]{"🏠 Dashboard",    DASHBOARD,    null},
-            new String[]{"💰 Caisse",       CAISSE,       null},
-            new String[]{"📊 Recouvrement", RECOUVREMENT, null},
-            new String[]{"📄 Rapports",     RAPPORTS,     null}
-        ));
-        // LIVREUR — sorties/retours
-        MENUS_PAR_ROLE.put("LIVREUR", Arrays.asList(
-            new String[]{"🏠 Dashboard",    DASHBOARD,    null},
-            new String[]{"👥 Clients",      CLIENTS,      null},
-            new String[]{"📋 Sorties",      SORTIES,      null}
-        ));
-    }
+    private static final List<NavItem> NAV_ITEMS = List.of(
+        new NavItem("Tableau de bord", DASHBOARD, null, BootstrapIcons.GRID_1X2_FILL),
+        new NavItem("Produits", PRODUITS, "PRODUIT_READ", BootstrapIcons.BOX_SEAM_FILL),
+        new NavItem("Clients", CLIENTS, "CLIENT_READ", BootstrapIcons.PEOPLE_FILL),
+        new NavItem("Sorties", SORTIES, "SORTIE_READ", BootstrapIcons.JOURNAL_TEXT),
+        new NavItem("Facturation", FACTURATION, "FACTURATION_READ", BootstrapIcons.RECEIPT_CUTTOFF),
+        new NavItem("Caisse", CAISSE, "CAISSE_READ", BootstrapIcons.CASH_STACK),
+        new NavItem("Recouvrement", RECOUVREMENT, "RECOUVREMENT_READ", BootstrapIcons.BAR_CHART_FILL),
+        new NavItem("Utilisateurs", UTILISATEURS, "USER_WRITE", BootstrapIcons.PERSON_GEAR),
+        new NavItem("Rapports", RAPPORTS, "RAPPORT_READ", BootstrapIcons.FILE_EARMARK_BAR_GRAPH_FILL),
+        new NavItem("Audit", AUDIT, "AUDIT_READ", BootstrapIcons.SHIELD_CHECK),
+        new NavItem("Paramètres", PARAMETRES, "CLOTURE_WRITE", BootstrapIcons.GEAR_FILL)
+    );
 
     public MainWindow(Stage stage) {
         this.stage = stage;
@@ -109,10 +81,10 @@ public class MainWindow {
 
     public void show() {
         BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: #F3F6FA;");
+        root.getStyleClass().add("main-container");
 
         contentArea = new StackPane();
-        contentArea.setStyle("-fx-background-color: #F3F6FA;");
+        contentArea.getStyleClass().add("content-panel");
 
         root.setTop(buildNavBar());
         root.setCenter(contentArea);
@@ -122,6 +94,7 @@ public class MainWindow {
         Scene scene = new Scene(root, bounds.getWidth(), bounds.getHeight());
         scene.getStylesheets().add(
             getClass().getResource("/styles/app.css").toExternalForm());
+        installSessionActivityTracking(scene);
 
         stage.setScene(scene);
         stage.setMaximized(true);          // Garantir la maximisation
@@ -134,6 +107,9 @@ public class MainWindow {
         stage.setMaximized(true);          // Double appel = garanti même sur certains WM
 
         navigate(DASHBOARD);
+        if (navButtons.containsKey(DASHBOARD)) {
+            setActiveNavBtn(navButtons.get(DASHBOARD));
+        }
 
         // Horloge
         Timeline clock = new Timeline(
@@ -152,26 +128,27 @@ public class MainWindow {
     private HBox buildNavBar() {
         HBox nav = new HBox();
         nav.setAlignment(Pos.CENTER_LEFT);
-        nav.setStyle(
-            "-fx-background-color: #082B57; "
-            + "-fx-pref-height: 52; -fx-min-height: 52; -fx-max-height: 52;");
+        nav.getStyleClass().add("nav-bar");
 
         // Logo
-        Label logo = new Label("  🥖  Gestion Boulangerie");
-        logo.setStyle("-fx-font-size:15px; -fx-font-weight:bold; "
-            + "-fx-text-fill:white; -fx-padding:0 16 0 10;");
+        HBox logoBox = new HBox(10);
+        logoBox.setAlignment(Pos.CENTER_LEFT);
+        logoBox.setPadding(new Insets(0, 16, 0, 10));
+        FontIcon logoIcon = new FontIcon(BootstrapIcons.BASKET2_FILL);
+        logoIcon.setIconColor(Color.web("#FBC02D"));
+        logoIcon.setIconSize(18);
+        Label logo = new Label("Gestion Boulangerie");
+        logo.getStyleClass().add("nav-logo");
+        logoBox.getChildren().addAll(logoIcon, logo);
 
         // Boutons filtrés selon le rôle connecté
-        HBox navBtns = new HBox(0);
+        HBox navBtns = new HBox(4);
         navBtns.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(navBtns, Priority.ALWAYS);
 
-        String role = session.getUtilisateur().getRole().getNom().toUpperCase();
-        List<String[]> menus = MENUS_PAR_ROLE.getOrDefault(role,
-            MENUS_PAR_ROLE.get("LIVREUR")); // Rôle inconnu → accès minimal
-
-        for (String[] item : menus) {
-            Button btn = makeNavBtn(item[0], item[1]);
+        for (NavItem item : getAvailableNavItems()) {
+            Button btn = makeNavBtn(item);
+            navButtons.put(item.key(), btn);
             navBtns.getChildren().add(btn);
         }
 
@@ -189,7 +166,7 @@ public class MainWindow {
         userIcon.setIconColor(Color.web("#EAF2FC"));
         Label lblUser = new Label(
             session.getUtilisateur().getNomComplet()
-            + "  ·  " + role);
+            + "  ·  " + session.getUtilisateur().getRole().getNom().toUpperCase());
         lblUser.setStyle("-fx-font-size:11px; -fx-text-fill:#EAF2FC;");
         userChip.getChildren().addAll(userIcon, lblUser);
 
@@ -204,49 +181,35 @@ public class MainWindow {
             + "-fx-padding:0 12 0 8;");
         btnDeconn.setOnAction(e -> deconnecter());
 
-        nav.getChildren().addAll(logo, navBtns, spacer, userChip, btnDeconn);
+        nav.getChildren().addAll(logoBox, navBtns, spacer, userChip, btnDeconn);
         nav.setPadding(new Insets(0, 6, 0, 0));
         return nav;
     }
 
-    private Button makeNavBtn(String label, String key) {
-        Button btn = new Button(label);
-        btn.setStyle(NAV_BTN_STYLE_NORMAL);
+    private Button makeNavBtn(NavItem item) {
+        Button btn = new Button(item.label());
+        btn.getStyleClass().add("nav-button");
+        FontIcon icon = new FontIcon(item.icon());
+        icon.setIconSize(14);
+        icon.setIconColor(Color.web("#EAF2FC"));
+        btn.setGraphic(icon);
         btn.setOnAction(e -> {
-            navigate(key);
+            navigate(item.key());
             setActiveNavBtn(btn);
-        });
-        btn.setOnMouseEntered(e -> {
-            if (btn != activeNavBtn) btn.setStyle(NAV_BTN_STYLE_HOVER);
-        });
-        btn.setOnMouseExited(e -> {
-            if (btn != activeNavBtn) btn.setStyle(NAV_BTN_STYLE_NORMAL);
         });
         return btn;
     }
 
-    private static final String NAV_BTN_STYLE_NORMAL =
-        "-fx-background-color:transparent; -fx-text-fill:#EAF2FC; "
-        + "-fx-font-size:12px; -fx-padding:0 10 0 10; "
-        + "-fx-pref-height:52; -fx-background-radius:0; "
-        + "-fx-border-width:0 0 2 0; -fx-border-color:transparent; -fx-cursor:hand;";
-
-    private static final String NAV_BTN_STYLE_HOVER =
-        "-fx-background-color:#0D417E; -fx-text-fill:white; "
-        + "-fx-font-size:12px; -fx-padding:0 10 0 10; "
-        + "-fx-pref-height:52; -fx-background-radius:0; "
-        + "-fx-border-width:0 0 2 0; -fx-border-color:transparent; -fx-cursor:hand;";
-
-    private static final String NAV_BTN_STYLE_ACTIVE =
-        "-fx-background-color:#FBC02D; -fx-text-fill:#082B57; "
-        + "-fx-font-size:12px; -fx-font-weight:bold; -fx-padding:0 10 0 10; "
-        + "-fx-pref-height:52; -fx-background-radius:0; "
-        + "-fx-border-width:0 0 2 0; -fx-border-color:transparent; -fx-cursor:hand;";
-
     private void setActiveNavBtn(Button btn) {
-        if (activeNavBtn != null) activeNavBtn.setStyle(NAV_BTN_STYLE_NORMAL);
+        if (activeNavBtn != null) {
+            activeNavBtn.getStyleClass().remove("active");
+            updateNavIconColor(activeNavBtn, "#EAF2FC");
+        }
         activeNavBtn = btn;
-        btn.setStyle(NAV_BTN_STYLE_ACTIVE);
+        if (!btn.getStyleClass().contains("active")) {
+            btn.getStyleClass().add("active");
+        }
+        updateNavIconColor(btn, "#082B57");
     }
 
     // ── Barre de statut ───────────────────────────────────────────
@@ -254,9 +217,7 @@ public class MainWindow {
         HBox bar = new HBox();
         bar.setAlignment(Pos.CENTER_LEFT);
         bar.setPadding(new Insets(0, 14, 0, 14));
-        bar.setStyle("-fx-background-color:#F3F6FA; "
-            + "-fx-border-color:#D7E0EA transparent transparent transparent; "
-            + "-fx-border-width:1 0 0 0; -fx-pref-height:28;");
+        bar.getStyleClass().add("status-bar");
 
         Label lblInfo = new Label(
             "Utilisateur : " + session.getUtilisateur().getNomComplet()
@@ -275,6 +236,12 @@ public class MainWindow {
 
     // ── Navigation lazy ───────────────────────────────────────────
     public void navigate(String key) {
+        if (!canAccess(key)) {
+            showAlert("Accès refusé",
+                "Vous ne disposez pas des autorisations nécessaires pour accéder à cet écran.",
+                Alert.AlertType.WARNING);
+            return;
+        }
         // Masquer tous
         for (var child : contentArea.getChildren()) {
             child.setVisible(false);
@@ -353,4 +320,35 @@ public class MainWindow {
 
     public SessionService getSession() { return session; }
     public Stage          getStage()   { return stage; }
+
+    private List<NavItem> getAvailableNavItems() {
+        List<NavItem> items = new ArrayList<>();
+        for (NavItem item : NAV_ITEMS) {
+            if (item.permissionCode() == null || session.hasPermission(item.permissionCode()) || session.isAdmin()) {
+                items.add(item);
+            }
+        }
+        return items;
+    }
+
+    private boolean canAccess(String key) {
+        return getAvailableNavItems().stream().anyMatch(item -> item.key().equals(key));
+    }
+
+    private void installSessionActivityTracking(Scene scene) {
+        scene.addEventFilter(Event.ANY, event -> {
+            Object source = event.getSource();
+            if (source instanceof Node) {
+                session.rafraichir();
+            }
+        });
+    }
+
+    private void updateNavIconColor(Button btn, String color) {
+        if (btn.getGraphic() instanceof FontIcon icon) {
+            icon.setIconColor(Color.web(color));
+        }
+    }
+
+    private record NavItem(String label, String key, String permissionCode, BootstrapIcons icon) {}
 }
