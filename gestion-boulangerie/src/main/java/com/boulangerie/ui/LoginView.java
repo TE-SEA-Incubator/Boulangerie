@@ -1,29 +1,34 @@
 package com.boulangerie.ui;
 
 import atlantafx.base.controls.PasswordTextField;
-import atlantafx.base.theme.Styles;
 import com.boulangerie.service.AuthService;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.util.Objects;
+
 /**
- * Écran de connexion — design moderne :
- * • Fond dégradé marine/bleu
- * • Panneau droit blanc avec carte centrale
- * • Icône vectorielle Ikonli, bouton animé
- * • Taille plein écran (même taille que les autres pages)
+ * Page de connexion — charte officielle Boulangerie.
+ *
+ * Couleurs :
+ *   Bleu nuit  #1F3A5F  |  Bleu moyen #2E5A88
+ *   Ambre/Or   #F5A623  |  Crème      #FFF3E0
+ *
+ * Panneau gauche : fond bleu nuit, logo + boulanger + liste features
+ * Panneau droit  : fond crème, carte blanche avec formulaire épuré
  */
 public class LoginView {
-    private static final String DEFAULT_LOGIN_BUTTON_TEXT = "Se connecter";
+    private static final String DEFAULT_BTN_TEXT = "Se connecter";
 
     private final Stage       stage;
     private final AuthService authService = new AuthService();
@@ -47,117 +52,119 @@ public class LoginView {
         StackPane backdrop = new StackPane();
         backdrop.getStyleClass().add("login-root");
 
-        // ── Fond dégradé gauche (marine → bleu) ──────────────────
         HBox layout = new HBox();
         layout.setFillHeight(true);
 
-        // Panneau gauche : branding / décoration
-        VBox leftPanel = buildLeftPanel();
-        HBox.setHgrow(leftPanel, Priority.ALWAYS);
+        VBox left  = buildLeftPanel();
+        VBox right = buildRightPanel();
+        right.setMinWidth(500); right.setMaxWidth(500);
+        HBox.setHgrow(left, Priority.ALWAYS);
 
-        // Panneau droit : formulaire de connexion
-        VBox rightPanel = buildRightPanel();
-        rightPanel.setMinWidth(480);
-        rightPanel.setMaxWidth(480);
-
-        layout.getChildren().addAll(leftPanel, rightPanel);
+        layout.getChildren().addAll(left, right);
         backdrop.getChildren().add(layout);
         return backdrop;
     }
 
-    // ── Panneau gauche (branding) ─────────────────────────────────
+    // ── Panneau gauche : Bleu nuit + logo + boulanger ─────────────
     private VBox buildLeftPanel() {
-        VBox panel = new VBox(24);
+        VBox panel = new VBox(20);
         panel.setAlignment(Pos.CENTER);
-        panel.setPadding(new Insets(60));
+        panel.setPadding(new Insets(40, 50, 40, 50));
         panel.getStyleClass().add("login-brand-panel");
 
-        // Icône principale
-        FontIcon mainIcon = new FontIcon(BootstrapIcons.BASKET2_FILL);
-        mainIcon.setIconSize(90);
-        mainIcon.setIconColor(Color.web("#FBC02D"));
+        // Logo principal (grand, centré)
+        ImageView logo = loadImage("assets/logo.png", 220, 220);
 
+        // Titre
         Label lblApp = new Label("BOULANGERIE");
         lblApp.getStyleClass().add("login-brand-title");
 
-        Label lblSlogan = new Label("Qualité & Tradition");
+        Label lblSlogan = new Label("Gestion des entrées & sorties");
         lblSlogan.getStyleClass().add("login-brand-subtitle");
 
-        // Séparateur décoratif
-        HBox sepRow = new HBox();
-        sepRow.setAlignment(Pos.CENTER);
-        Region sepLeft = new Region();
-        sepLeft.setStyle("-fx-background-color:#FBC02D; -fx-pref-height:2; -fx-pref-width:40; -fx-background-radius:1;");
-        Label sepDot = new Label("  ◆  ");
-        sepDot.setStyle("-fx-text-fill:#FBC02D; -fx-font-size:14px;");
-        Region sepRight = new Region();
-        sepRight.setStyle("-fx-background-color:#FBC02D; -fx-pref-height:2; -fx-pref-width:40; -fx-background-radius:1;");
-        sepRow.getChildren().addAll(sepLeft, sepDot, sepRight);
+        // Séparateur bleu nuit (contraste sur fond orange)
+        HBox golden = new HBox(8);
+        golden.setAlignment(Pos.CENTER);
+        Region sl = new Region();
+        sl.setStyle("-fx-background-color:#1F3A5F; -fx-pref-height:2; -fx-pref-width:50; -fx-background-radius:1;");
+        Label dot = new Label("◆");
+        dot.setStyle("-fx-text-fill:#1F3A5F; -fx-font-size:12px;");
+        Region sr = new Region();
+        sr.setStyle("-fx-background-color:#1F3A5F; -fx-pref-height:2; -fx-pref-width:50; -fx-background-radius:1;");
+        golden.getChildren().addAll(sl, dot, sr);
 
-        // Fonctionnalités
-        VBox features = new VBox(10);
+        // Features — texte bleu nuit sur fond orange
+        VBox features = new VBox(8);
         features.setAlignment(Pos.CENTER_LEFT);
         features.setMaxWidth(340);
-        for (String f : new String[]{
+        String[] items = {
             "Gestion des sorties & retours journaliers",
             "Facturation automatique & verrouillée",
             "Caisse & rapprochement en temps réel",
             "Recouvrement & suivi des créances",
             "Journal d'audit immuable et traçable"
-        }) {
+        };
+        for (String txt : items) {
             HBox row = new HBox(10);
             row.setAlignment(Pos.CENTER_LEFT);
-            FontIcon check = new FontIcon(BootstrapIcons.CHECK_CIRCLE_FILL);
-            check.setIconSize(14);
-            check.setIconColor(Color.web("#FBC02D"));
-            Label lbl = new Label(f);
-            lbl.setStyle("-fx-text-fill:#D7E8FB; -fx-font-size:13px;");
-            row.getChildren().addAll(check, lbl);
+            FontIcon icon = new FontIcon(BootstrapIcons.CHECK_CIRCLE_FILL);
+            icon.setIconSize(13);
+            icon.setIconColor(Color.web("#1F3A5F"));
+            Label lbl = new Label(txt);
+            // Bleu nuit sur fond orange = contraste élevé
+            lbl.setStyle("-fx-text-fill:#1F3A5F; -fx-font-size:13px; -fx-font-weight:bold;");
+            row.getChildren().addAll(icon, lbl);
             features.getChildren().add(row);
         }
 
-        // Version
+        // Image boulanger en bas
+        ImageView baker = loadImage("assets/Image 3.png", 150, 150);
+        if (baker != null) {
+            Rectangle clip = new Rectangle(150, 150);
+            clip.setArcWidth(18); clip.setArcHeight(18);
+            baker.setClip(clip);
+        }
+
         Label lblVer = new Label("v1.0.0 — Gestion Boulangerie");
         lblVer.getStyleClass().add("login-version");
 
-        panel.getChildren().addAll(mainIcon, lblApp, lblSlogan, sepRow, features, lblVer);
+        if (logo != null) panel.getChildren().add(logo);
+        panel.getChildren().addAll(lblApp, lblSlogan, golden, features);
+        if (baker != null) panel.getChildren().add(baker);
+        panel.getChildren().add(lblVer);
         return panel;
     }
 
-    // ── Panneau droit (formulaire) ────────────────────────────────
+    // ── Panneau droit : Crème + carte blanche ─────────────────────
     private VBox buildRightPanel() {
         VBox panel = new VBox();
         panel.setAlignment(Pos.CENTER);
         panel.getStyleClass().add("login-form-panel");
         panel.setFillWidth(true);
-
-        VBox card = buildCard();
-        panel.getChildren().add(card);
+        panel.getChildren().add(buildCard());
         return panel;
     }
 
     private VBox buildCard() {
-        VBox card = new VBox(16);
-        card.setAlignment(Pos.TOP_CENTER);
+        VBox card = new VBox(14);
+        card.setAlignment(Pos.TOP_LEFT);
         card.getStyleClass().add("login-card");
-        card.setMaxWidth(400);
-        card.setMinWidth(380);
+        card.setMaxWidth(420); card.setMinWidth(380);
 
-        // Titre connexion
-        Label lblConnexion = new Label("Connexion");
-        lblConnexion.getStyleClass().add("login-title");
-        lblConnexion.setAlignment(Pos.CENTER);
-        lblConnexion.setMaxWidth(Double.MAX_VALUE);
+        // Titre
+        Label lblTitre = new Label("Connexion");
+        lblTitre.getStyleClass().add("login-title");
+        lblTitre.setMaxWidth(Double.MAX_VALUE);
+        lblTitre.setAlignment(Pos.CENTER_LEFT);
 
-        Label lblSub = new Label("Entrez vos identifiants pour accéder à l'application.");
+        Label lblSub = new Label("Entrez vos identifiants pour accéder à l'espace de gestion.");
         lblSub.getStyleClass().add("login-subtitle");
-        lblSub.setWrapText(true);
-        lblSub.setMaxWidth(Double.MAX_VALUE);
+        lblSub.setWrapText(true); lblSub.setMaxWidth(Double.MAX_VALUE);
 
         // Séparateur
         Region sep = new Region();
-        sep.setStyle("-fx-background-color:#D7E0EA; -fx-pref-height:1; -fx-max-height:1;");
         sep.setMaxWidth(Double.MAX_VALUE);
+        sep.getStyleClass().add("section-divider");
 
         // ── Identifiant ───────────────────────────────────────────
         Label lblLoginLbl = new Label("Identifiant");
@@ -165,15 +172,11 @@ public class LoginView {
         lblLoginLbl.setMaxWidth(Double.MAX_VALUE);
 
         txtLogin = new TextField();
-        txtLogin.setPromptText("Votre identifiant de connexion");
-        txtLogin.getStyleClass().addAll(Styles.ROUNDED);
+        txtLogin.setPromptText("admin");
         txtLogin.getStyleClass().add("login-input");
         txtLogin.setMaxWidth(Double.MAX_VALUE);
         txtLogin.setOnAction(e -> txtPassword.requestFocus());
-        txtLogin.textProperty().addListener((obs, oldValue, newValue) -> {
-            clearError();
-            updateHint("Utilisez votre identifiant personnel fourni par l'administrateur.");
-        });
+        txtLogin.textProperty().addListener((o, ov, nv) -> clearError());
 
         // ── Mot de passe ──────────────────────────────────────────
         Label lblPassLbl = new Label("Mot de passe");
@@ -181,91 +184,82 @@ public class LoginView {
         lblPassLbl.setMaxWidth(Double.MAX_VALUE);
 
         txtPassword = new PasswordTextField();
-        txtPassword.setPromptText("Votre mot de passe");
-        txtPassword.getStyleClass().addAll(Styles.ROUNDED);
+        txtPassword.setPromptText("••••••••••");
         txtPassword.getStyleClass().add("login-input");
         txtPassword.setMaxWidth(Double.MAX_VALUE);
         txtPassword.setOnAction(e -> connecter());
-        txtPassword.textProperty().addListener((obs, oldValue, newValue) -> clearError());
+        txtPassword.textProperty().addListener((o, ov, nv) -> clearError());
 
-        lblHint = new Label("Utilisez votre identifiant personnel fourni par l'administrateur.");
-        lblHint.getStyleClass().add("login-hint");
-        lblHint.setWrapText(true);
-        lblHint.setMaxWidth(Double.MAX_VALUE);
-
-        // ── Message erreur ────────────────────────────────────────
+        // ── Erreur ────────────────────────────────────────────────
         lblError = new Label(" ");
         lblError.getStyleClass().add("login-error");
         lblError.setMaxWidth(Double.MAX_VALUE);
         lblError.setWrapText(true);
-        lblError.setManaged(false);
-        lblError.setVisible(false);
+        lblError.setVisible(false); lblError.setManaged(false);
 
-        // ── Bouton connexion ──────────────────────────────────────
-        btnLogin = new Button(DEFAULT_LOGIN_BUTTON_TEXT);
+        // ── Hint ──────────────────────────────────────────────────
+        lblHint = new Label("Utilisez votre identifiant fourni par l'administrateur.");
+        lblHint.getStyleClass().add("login-hint");
+        lblHint.setWrapText(true); lblHint.setMaxWidth(Double.MAX_VALUE);
+
+        // ── Bouton ────────────────────────────────────────────────
+        btnLogin = new Button(DEFAULT_BTN_TEXT);
         btnLogin.getStyleClass().add("login-btn-filled");
         btnLogin.setMaxWidth(Double.MAX_VALUE);
-        btnLogin.setGraphic(createLoginIcon());
+        btnLogin.setGraphic(createBtnIcon());
         btnLogin.setOnAction(e -> connecter());
 
+        // Progress
         progressIndicator = new ProgressIndicator();
         progressIndicator.getStyleClass().add("login-progress");
-        progressIndicator.setPrefSize(18, 18);
-        progressIndicator.setVisible(false);
-        progressIndicator.setManaged(false);
-
-        Label lblActionInfo = new Label("Accès sécurisé avec contrôle de session et journalisation.");
-        lblActionInfo.getStyleClass().add("login-hint");
-        lblActionInfo.setWrapText(true);
-        lblActionInfo.setMaxWidth(Double.MAX_VALUE);
+        progressIndicator.setPrefSize(20, 20);
+        progressIndicator.setVisible(false); progressIndicator.setManaged(false);
 
         // ── Info sécurité ─────────────────────────────────────────
-        HBox infoRow = new HBox(6);
-        infoRow.setAlignment(Pos.CENTER);
-        FontIcon lockIcon = new FontIcon(BootstrapIcons.SHIELD_LOCK);
-        lockIcon.setIconSize(12);
-        lockIcon.setIconColor(Color.web("#536477"));
-        Label lblInfo = new Label("Déconnexion automatique après inactivité");
-        lblInfo.getStyleClass().add("login-info");
-        infoRow.getChildren().addAll(lockIcon, lblInfo);
+        HBox secRow = new HBox(6);
+        secRow.setAlignment(Pos.CENTER);
+        FontIcon shield = new FontIcon(BootstrapIcons.SHIELD_LOCK);
+        shield.setIconSize(12); shield.setIconColor(Color.web("#6B7A8D"));
+        Label lblSec = new Label("Accès sécurisé — déconnexion automatique après inactivité");
+        lblSec.getStyleClass().add("login-info");
+        secRow.getChildren().addAll(shield, lblSec);
 
+        // ── Grille info rapide ────────────────────────────────────
         GridPane quickInfo = new GridPane();
-        quickInfo.getStyleClass().add("login-quick-info");
-        quickInfo.setHgap(10);
-        quickInfo.setVgap(10);
+        quickInfo.setHgap(10); quickInfo.setVgap(8);
         quickInfo.setMaxWidth(Double.MAX_VALUE);
-        addQuickInfoItem(quickInfo, 0, 0, "Sécurité", "Protection locale contre les échecs répétés.");
-        addQuickInfoItem(quickInfo, 1, 0, "Session", "Expiration automatique après inactivité.");
-        addQuickInfoItem(quickInfo, 0, 1, "Traçabilité", "Toutes les connexions sont auditées.");
-        addQuickInfoItem(quickInfo, 1, 1, "Support", "Contactez l'admin en cas de blocage.");
+        addInfo(quickInfo, 0, 0, "🔒 Sécurité", "Protection contre les échecs répétés.");
+        addInfo(quickInfo, 1, 0, "⏱ Session", "Expiration automatique par inactivité.");
+        addInfo(quickInfo, 0, 1, "📋 Traçabilité", "Toutes les connexions sont auditées.");
+        addInfo(quickInfo, 1, 1, "👤 Support", "Contactez l'admin en cas de blocage.");
+        for (int c = 0; c < 2; c++) {
+            ColumnConstraints cc = new ColumnConstraints();
+            cc.setHgrow(Priority.ALWAYS); cc.setFillWidth(true);
+            quickInfo.getColumnConstraints().add(cc);
+        }
 
-        // ── Assemblage ────────────────────────────────────────────
         card.getChildren().addAll(
-            lblConnexion, lblSub, sep,
+            lblTitre, lblSub, sep,
             lblLoginLbl, txtLogin,
             lblPassLbl, txtPassword,
-            lblHint,
-            lblError,
-            lblActionInfo,
-            btnLogin,
-            progressIndicator,
-            quickInfo,
-            infoRow
+            lblHint, lblError,
+            btnLogin, progressIndicator,
+            quickInfo, secRow
         );
         return card;
     }
 
+    // ── Logique de connexion ──────────────────────────────────────
     private void connecter() {
         String login = txtLogin.getText().trim();
         String mdp   = txtPassword.getPassword();
-
         if (login.isEmpty() || mdp.isEmpty()) {
             showError("Veuillez saisir votre identifiant et mot de passe.");
             return;
         }
         clearError();
-        updateHint("Vérification des informations de connexion...");
-        setLoadingState(true);
+        setLoading(true);
+        lblHint.setText("Vérification en cours…");
 
         Task<Void> task = new Task<>() {
             private String errorMsg;
@@ -280,10 +274,10 @@ public class LoginView {
                         showError(errorMsg);
                         txtPassword.clear();
                         txtPassword.requestFocus();
-                        updateHint("Vérifiez vos informations puis réessayez.");
-                        setLoadingState(false);
+                        lblHint.setText("Vérifiez vos informations puis réessayez.");
+                        setLoading(false);
                     } else {
-                        updateHint("Connexion réussie. Chargement de l'espace de travail...");
+                        lblHint.setText("Connexion réussie. Chargement…");
                         new MainWindow(stage).show();
                     }
                 });
@@ -292,53 +286,50 @@ public class LoginView {
         new Thread(task, "login-thread").start();
     }
 
+    // ── Helpers ───────────────────────────────────────────────────
     private void showError(String msg) {
-        lblError.setText(msg);
-        lblError.setVisible(true);
-        lblError.setManaged(true);
+        lblError.setText(msg); lblError.setVisible(true); lblError.setManaged(true);
     }
-
     private void clearError() {
-        lblError.setText(" ");
-        lblError.setVisible(false);
-        lblError.setManaged(false);
+        lblError.setVisible(false); lblError.setManaged(false);
     }
-
-    private void updateHint(String message) {
-        lblHint.setText(message);
+    private void setLoading(boolean on) {
+        btnLogin.setDisable(on);
+        txtLogin.setDisable(on);
+        txtPassword.setDisable(on);
+        btnLogin.setText(on ? "Connexion en cours…" : DEFAULT_BTN_TEXT);
+        btnLogin.setGraphic(on ? null : createBtnIcon());
+        progressIndicator.setVisible(on); progressIndicator.setManaged(on);
     }
-
-    private void setLoadingState(boolean loading) {
-        btnLogin.setDisable(loading);
-        txtLogin.setDisable(loading);
-        txtPassword.setDisable(loading);
-        btnLogin.setText(loading ? "Connexion en cours..." : DEFAULT_LOGIN_BUTTON_TEXT);
-        btnLogin.setGraphic(loading ? null : createLoginIcon());
-        progressIndicator.setVisible(loading);
-        progressIndicator.setManaged(loading);
+    private FontIcon createBtnIcon() {
+        FontIcon fi = new FontIcon(BootstrapIcons.BOX_ARROW_IN_RIGHT);
+        fi.setIconColor(Color.WHITE);
+        return fi;
     }
-
-    private FontIcon createLoginIcon() {
-        FontIcon icon = new FontIcon(BootstrapIcons.BOX_ARROW_IN_RIGHT);
-        icon.setIconColor(Color.WHITE);
-        return icon;
-    }
-
-    private void addQuickInfoItem(GridPane quickInfo, int column, int row, String title, String value) {
+    private void addInfo(GridPane g, int col, int row, String title, String val) {
         VBox item = new VBox(2);
         item.getStyleClass().add("login-quick-info-item");
-
-        Label lblTitle = new Label(title);
-        lblTitle.getStyleClass().add("login-quick-info-title");
-
-        Label lblValue = new Label(value);
-        lblValue.getStyleClass().add("login-quick-info-value");
-        lblValue.setWrapText(true);
-
-        item.getChildren().addAll(lblTitle, lblValue);
-        quickInfo.add(item, column, row);
+        Label t = new Label(title); t.getStyleClass().add("login-quick-info-title");
+        Label v = new Label(val);   v.getStyleClass().add("login-quick-info-value");
+        v.setWrapText(true);
+        item.getChildren().addAll(t, v);
+        g.add(item, col, row);
         GridPane.setHgrow(item, Priority.ALWAYS);
         GridPane.setFillWidth(item, true);
-        GridPane.setHalignment(item, HPos.LEFT);
+    }
+
+    /** Charge une image depuis le classpath resources */
+    private ImageView loadImage(String path, double w, double h) {
+        try {
+            var url = getClass().getClassLoader().getResource(path);
+            if (url == null) return null;
+            Image img = new Image(url.toExternalForm(), w, h, true, true);
+            ImageView iv = new ImageView(img);
+            iv.setFitWidth(w); iv.setFitHeight(h);
+            iv.setPreserveRatio(true);
+            return iv;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

@@ -64,12 +64,30 @@ public abstract class FxPanelBase implements FxPanel {
         return bar;
     }
 
-    /** En-tête : titre + toolbar */
     protected VBox header(String titre, Node... toolbarNodes) {
-        VBox h = new VBox(8);
-        h.setPadding(new Insets(0, 0, 12, 0));
-        h.getChildren().add(sectionTitle(titre));
-        if (toolbarNodes.length > 0) h.getChildren().add(toolbar(toolbarNodes));
+        VBox h = new VBox(6);
+        h.setPadding(new Insets(0, 0, 8, 0));
+
+        // Ligne titre + éventuelle image déco
+        HBox titleRow = new HBox(12);
+        titleRow.setAlignment(Pos.CENTER_LEFT);
+        titleRow.getChildren().add(sectionTitle(titre));
+
+        // Bande ambre sous le titre
+        Region accent = new Region();
+        accent.setStyle(
+            "-fx-background-color: #F5A623; "
+            + "-fx-pref-height:3; -fx-max-height:3; "
+            + "-fx-background-radius:2; -fx-pref-width:44;");
+
+        if (toolbarNodes.length > 0) {
+            HBox bar = new HBox(8);
+            bar.setAlignment(Pos.CENTER_LEFT);
+            bar.getChildren().addAll(toolbarNodes);
+            h.getChildren().addAll(titleRow, accent, bar);
+        } else {
+            h.getChildren().addAll(titleRow, accent);
+        }
         return h;
     }
 
@@ -241,6 +259,19 @@ public abstract class FxPanelBase implements FxPanel {
         sp.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
         VBox.setVgrow(sp, Priority.ALWAYS);
         return sp;
+    }
+
+    /** Charge une image depuis resources/assets/ */
+    protected javafx.scene.image.ImageView loadImage(String path, double w, double h) {
+        try {
+            var url = getClass().getClassLoader().getResource(path);
+            if (url == null) return null;
+            var img = new javafx.scene.image.Image(url.toExternalForm(), w, h, true, true);
+            var iv  = new javafx.scene.image.ImageView(img);
+            iv.setFitWidth(w); iv.setFitHeight(h);
+            iv.setPreserveRatio(true);
+            return iv;
+        } catch (Exception e) { return null; }
     }
 
     /** Label footer comptage */

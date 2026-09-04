@@ -1,421 +1,368 @@
 /* ============================================================
-   Gestion Boulangerie — Feuille de styles globale
-   Compatible AtlantaFX PrimerLight
+   GESTION BOULANGERIE — Charte graphique officielle v6
+   Palette : #1F3A5F #2E5A88 #F5A623 #FFF3E0 #2E7D32 #C62828 #1A2733
+   Typo    : Playfair Display (titres) + Montserrat (textes)
    ============================================================ */
 
-/* ── Variables de couleurs ───────────────────────────────── */
+/* ── Variables palette officielle ────────────────────────── */
 .root {
-    -color-accent-fg:       #1267C4;
-    -color-accent-emphasis: #0B4D93;
-    -color-success-fg:      #0F9D58;
-    -color-danger-fg:       #D93025;
-    -color-warning-fg:      #F29900;
+    -app-bleu-nuit:    #1F3A5F;
+    -app-bleu-moyen:   #2E5A88;
+    -app-ambre:        #F5A623;
+    -app-creme:        #FFF3E0;
+    -app-vert:         #2E7D32;
+    -app-rouge:        #C62828;
+    -app-gris-texte:   #1A2733;
+    -app-gris-clair:   #F4F0E8;
+    -app-blanc:        #FFFFFF;
+    -app-bordure:      #D6CFC4;
+    -app-ombre:        dropshadow(gaussian, rgba(31,58,95,0.12), 10, 0, 0, 3);
 
-    -app-bg:          #F3F6FA;
-    -app-border:      #D7E0EA;
-    -app-text-muted:  #536477;
-    -app-white:       #FFFFFF;
-    -app-navy:        #082B57;
-    -app-yellow:      #FBC02D;
-    -app-brown:       #7A442D;
-    -app-blue-light:  #E7F1FC;
-    -app-card-shadow: dropshadow(gaussian, rgba(0,0,0,0.08), 8, 0, 0, 2);
+    /* Remapping AtlantaFX */
+    -color-accent-fg:       #2E5A88;
+    -color-accent-emphasis: #1F3A5F;
+    -color-success-fg:      #2E7D32;
+    -color-danger-fg:       #C62828;
+    -color-warning-fg:      #F5A623;
 }
 
-/* ── Fond général ────────────────────────────────────────── */
-.main-container {
-    -fx-background-color: -app-bg;
+/* ── Fond app ────────────────────────────────────────────── */
+.main-container, .content-panel {
+    -fx-background-color: -app-gris-clair;
 }
+.content-panel { -fx-padding: 22 26 22 26; }
 
-/* ── Carte blanche avec ombre ────────────────────────────── */
-.card {
-    -fx-background-color: -app-white;
-    -fx-background-radius: 8;
-    -fx-border-color: -app-border;
-    -fx-border-width: 1;
-    -fx-border-radius: 8;
-    -fx-effect: -app-card-shadow;
-    -fx-padding: 16;
-}
-
-/* ── Barre de navigation ─────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════
+   NAVBAR — Bleu nuit + ambre actif
+   ════════════════════════════════════════════════════════════ */
 .nav-bar {
-    -fx-background-color: -app-navy;
-    -fx-border-color: transparent transparent #061E3D transparent;
-    -fx-border-width: 0 0 1 0;
-    -fx-pref-height: 52;
-    -fx-min-height: 52;
-    -fx-max-height: 52;
+    -fx-background-color: -app-bleu-nuit;
+    -fx-pref-height: 56; -fx-min-height: 56; -fx-max-height: 56;
+    -fx-effect: dropshadow(gaussian, rgba(31,58,95,0.40), 10, 0, 0, 4);
 }
-
 .nav-logo {
     -fx-font-size: 15px;
     -fx-font-weight: bold;
     -fx-text-fill: white;
-    -fx-padding: 0 16 0 10;
 }
-
 .nav-button {
     -fx-background-color: transparent;
-    -fx-text-fill: #EAF2FC;
-    -fx-font-size: 13px;
+    -fx-text-fill: #A8C4E0;
+    -fx-font-size: 12px;
     -fx-padding: 0 10 0 10;
-    -fx-pref-height: 52;
+    -fx-pref-height: 56;
     -fx-background-radius: 0;
     -fx-border-width: 0 0 2 0;
     -fx-border-color: transparent;
     -fx-cursor: hand;
+    -fx-graphic-text-gap: 5;
 }
 .nav-button:hover {
     -fx-text-fill: white;
-    -fx-background-color: #0D417E;
+    -fx-background-color: -app-bleu-moyen;
 }
 .nav-button.active {
-    -fx-text-fill: #082B57;
-    -fx-border-color: transparent transparent -app-yellow transparent;
-    -fx-background-color: -app-yellow;
+    -fx-text-fill: -app-bleu-nuit;
+    -fx-background-color: -app-ambre;
     -fx-font-weight: bold;
+    -fx-border-color: transparent transparent #D4890A transparent;
 }
 
-/* ── Barre de statut ─────────────────────────────────────── */
+/* ── Status bar ──────────────────────────────────────────── */
 .status-bar {
-    -fx-background-color: -app-bg;
-    -fx-border-color: -app-border transparent transparent transparent;
+    -fx-background-color: #EDE8DE;
+    -fx-border-color: -app-bordure transparent transparent transparent;
     -fx-border-width: 1 0 0 0;
-    -fx-pref-height: 28;
-    -fx-padding: 0 14 0 14;
-    -fx-font-size: 11px;
-    -fx-text-fill: -app-text-muted;
+    -fx-pref-height: 30; -fx-padding: 0 14 0 14;
 }
 
-/* ── Login ───────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════
+   LOGIN — Couleurs charte officielle
+   ════════════════════════════════════════════════════════════ */
 .login-root {
-    -fx-background-color: -app-bg;
+    -fx-background-color: -app-creme;
 }
-
+/* ── Panneau gauche : AMBRE/OR de la charte ─────────────── */
 .login-brand-panel {
-    -fx-background-color: linear-gradient(to bottom right, #082B57, #1267C4);
+    -fx-background-color: linear-gradient(to bottom, #F5A623, #D4890A);
+}
+.login-brand-title {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -app-bleu-nuit;
+    -fx-letter-spacing: 3;
+}
+.login-brand-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: -app-bleu-nuit;
+    -fx-font-style: italic;
+}
+.login-version {
+    -fx-font-size: 11px;
+    -fx-text-fill: rgba(31,58,95,0.65);
 }
 
+/* Panneau droit : blanc cassé */
 .login-form-panel {
-    -fx-background-color: #F3F6FA;
+    -fx-background-color: #FEFAF4;
 }
 
+/* Carte formulaire blanche */
 .login-card {
     -fx-background-color: white;
-    -fx-background-radius: 14;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.14), 20, 0, 0, 4);
-    -fx-padding: 40 44 40 44;
+    -fx-background-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(31,58,95,0.15), 24, 0, 0, 6);
+    -fx-padding: 38 42 38 42;
 }
-
 .login-title {
     -fx-font-size: 24px;
     -fx-font-weight: bold;
-    -fx-text-fill: #082B57;
+    -fx-text-fill: -app-bleu-nuit;
 }
-
 .login-subtitle {
-    -fx-font-size: 12px;
-    -fx-text-fill: #536477;
-}
-
-.login-brand-title {
-    -fx-font-size: 32px;
-    -fx-font-weight: bold;
-    -fx-text-fill: white;
-}
-
-.login-brand-subtitle {
-    -fx-font-size: 16px;
-    -fx-text-fill: #EAF2FC;
-    -fx-font-style: italic;
-}
-
-.login-version {
-    -fx-text-fill: #5B8FC2;
-    -fx-font-size: 11px;
-}
-
-.login-field-label {
-    -fx-font-weight: bold;
     -fx-font-size: 13px;
-    -fx-text-fill: #082B57;
+    -fx-text-fill: #546E7A;
+    -fx-wrap-text: true;
 }
-
+.login-field-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -app-bleu-nuit;
+}
 .login-input {
     -fx-font-size: 13px;
-    -fx-pref-height: 40;
+    -fx-pref-height: 44;
+    -fx-background-color: #FEFAF4;
+    -fx-background-radius: 8;
+    -fx-border-color: #D6CFC4;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-padding: 0 12;
 }
-
-.login-hint {
-    -fx-font-size: 11px;
-    -fx-text-fill: #536477;
+.login-input:focused {
+    -fx-border-color: -app-bleu-nuit;
+    -fx-border-width: 2;
+    -fx-background-color: white;
+    -fx-effect: dropshadow(gaussian, rgba(31,58,95,0.15), 6, 0, 0, 0);
 }
-
-.login-logo-icon {
-    -fx-icon-color: -app-yellow;
-    -fx-icon-size: 90px;
-}
-
+/* Bouton : bleu nuit (contraste sur fond orange) */
 .login-btn-filled {
-    -fx-background-color: #1267C4;
+    -fx-background-color: -app-bleu-nuit;
     -fx-text-fill: white;
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-background-radius: 8;
     -fx-border-radius: 8;
-    -fx-pref-height: 44;
+    -fx-pref-height: 46;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(18,103,196,0.35), 8, 0, 0, 3);
+    -fx-graphic-text-gap: 8;
+    -fx-effect: dropshadow(gaussian, rgba(31,58,95,0.40), 10, 0, 0, 4);
 }
 .login-btn-filled:hover {
-    -fx-background-color: #0B4D93;
-    -fx-effect: dropshadow(gaussian, rgba(18,103,196,0.50), 12, 0, 0, 4);
+    -fx-background-color: -app-bleu-moyen;
+    -fx-effect: dropshadow(gaussian, rgba(31,58,95,0.55), 14, 0, 0, 5);
 }
 .login-btn-filled:pressed {
-    -fx-background-color: #082B57;
+    -fx-background-color: #142D4C;
     -fx-effect: none;
-    -fx-scale-x: 0.98;
-    -fx-scale-y: 0.98;
+    -fx-scale-x: 0.98; -fx-scale-y: 0.98;
 }
 .login-btn-filled:disabled {
-    -fx-background-color: #8AB8E8;
+    -fx-background-color: #7A9EC0;
     -fx-effect: none;
 }
-
-/* Séparateur entre logo et formulaire */
+.login-error {
+    -fx-text-fill: -app-rouge;
+    -fx-font-size: 12px;
+    -fx-background-color: #FDECEA;
+    -fx-background-radius: 6;
+    -fx-padding: 8 12;
+    -fx-wrap-text: true;
+}
+.login-hint {
+    -fx-text-fill: #6B7A8D;
+    -fx-font-size: 11px;
+    -fx-wrap-text: true;
+}
+.login-info {
+    -fx-text-fill: #546E7A;
+    -fx-font-size: 11px;
+}
+.login-progress { -fx-pref-size: 18; }
+.login-quick-info { -fx-padding: 0; }
+.login-quick-info-item {
+    -fx-background-color: #F4EFE6;
+    -fx-background-radius: 8;
+    -fx-border-color: #D6CFC4;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-padding: 8 10;
+}
+.login-quick-info-title {
+    -fx-font-size: 12px; -fx-font-weight: bold;
+    -fx-text-fill: -app-bleu-nuit;
+}
+.login-quick-info-value {
+    -fx-font-size: 11px; -fx-text-fill: #546E7A;
+    -fx-wrap-text: true;
+}
 .section-divider {
-    -fx-background-color: -app-border;
-    -fx-pref-height: 1;
-    -fx-max-height: 1;
-    -fx-min-height: 1;
+    -fx-background-color: -app-bordure;
+    -fx-pref-height: 1; -fx-max-height: 1;
     -fx-max-width: Infinity;
 }
 
-.login-error {
-    -fx-text-fill: #D93025;
-    -fx-font-size: 12px;
-    -fx-background-color: #FCE8E6;
-    -fx-background-radius: 6;
-    -fx-padding: 6 10;
-}
-
-.login-info {
-    -fx-text-fill: -app-text-muted;
-    -fx-font-size: 11px;
-}
-
-.login-progress {
-    -fx-progress-color: -color-accent-fg;
-}
-
-.login-quick-info {
-    -fx-padding: 6 0 2 0;
-}
-
-.login-quick-info-item {
-    -fx-background-color: #F7F9FC;
-    -fx-background-radius: 10;
-    -fx-border-color: #D7E0EA;
-    -fx-border-radius: 10;
-    -fx-padding: 10;
-}
-
-.login-quick-info-title {
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #082B57;
-}
-
-.login-quick-info-value {
-    -fx-font-size: 11px;
-    -fx-text-fill: #536477;
-}
-
-/* ── KPI Cards (Dashboard) ───────────────────────────────── */
+/* ════════════════════════════════════════════════════════════
+   KPI CARDS
+   ════════════════════════════════════════════════════════════ */
 .kpi-card {
     -fx-background-color: white;
-    -fx-background-radius: 8;
-    -fx-border-color: -app-border;
-    -fx-border-radius: 8;
+    -fx-background-radius: 12;
+    -fx-border-color: -app-bordure;
+    -fx-border-radius: 12;
     -fx-border-width: 1;
-    -fx-effect: -app-card-shadow;
-    -fx-padding: 14 16 14 16;
+    -fx-effect: -app-ombre;
+    -fx-padding: 16 18 16 18;
+}
+.kpi-card:hover {
+    -fx-border-color: -app-ambre;
+    -fx-effect: dropshadow(gaussian, rgba(245,166,35,0.20), 12, 0, 0, 2);
+}
+.kpi-title    { -fx-font-size: 11px; -fx-text-fill: #6B7A8D; }
+.kpi-value    { -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: -app-gris-texte; }
+.kpi-variation { -fx-font-size: 11px; -fx-text-fill: #6B7A8D; }
+
+/* ════════════════════════════════════════════════════════════
+   DASHBOARD CARDS
+   ════════════════════════════════════════════════════════════ */
+.dashboard-card {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: -app-bordure;
+    -fx-border-radius: 12;
+    -fx-border-width: 1;
+    -fx-padding: 16;
+    -fx-effect: -app-ombre;
 }
 
-.kpi-title {
-    -fx-font-size: 11px;
-    -fx-text-fill: -app-text-muted;
-}
-
-.kpi-value {
-    -fx-font-size: 20px;
+/* ── Raccourcis ───────────────────────────────────────────── */
+.shortcut-button {
+    -fx-background-color: #FFF8EC;
+    -fx-text-fill: -app-bleu-nuit;
+    -fx-font-size: 12px;
     -fx-font-weight: bold;
-    -fx-text-fill: #202124;
+    -fx-background-radius: 10;
+    -fx-border-color: #F5E5C0;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 10;
+    -fx-cursor: hand;
+    -fx-graphic-text-gap: 7;
+    -fx-effect: dropshadow(gaussian, rgba(31,58,95,0.07), 4, 0, 0, 1);
 }
-
-.kpi-variation-pos {
-    -fx-font-size: 11px;
-    -fx-text-fill: -color-success-fg;
+.shortcut-button:hover {
+    -fx-background-color: -app-ambre;
+    -fx-text-fill: -app-bleu-nuit;
+    -fx-border-color: #D4890A;
+    -fx-effect: dropshadow(gaussian, rgba(245,166,35,0.30), 8, 0, 0, 2);
 }
-
-.kpi-variation-neg {
-    -fx-font-size: 11px;
-    -fx-text-fill: -color-danger-fg;
+.shortcut-button:pressed {
+    -fx-background-color: #D4890A;
+    -fx-scale-x: 0.97; -fx-scale-y: 0.97;
 }
+.shortcut-icon { -fx-icon-size: 24px; }
 
-/* ── Titres de section ───────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════
+   TITRES
+   ════════════════════════════════════════════════════════════ */
 .section-title {
-    -fx-font-size: 20px;
+    -fx-font-size: 21px;
     -fx-font-weight: bold;
-    -fx-text-fill: #202124;
+    -fx-text-fill: -app-bleu-nuit;
 }
-
 .subsection-title {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-text-fill: #202124;
+    -fx-text-fill: -app-bleu-nuit;
 }
 
-/* ── TableView ───────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════
+   TABLEVIEW
+   ════════════════════════════════════════════════════════════ */
 .styled-table {
     -fx-font-size: 13px;
-}
-
-.styled-table .column-header {
-    -fx-background-color: -app-bg;
-    -fx-font-weight: bold;
-    -fx-text-fill: -app-text-muted;
-    -fx-font-size: 12px;
-    -fx-border-color: transparent transparent -app-border transparent;
-    -fx-border-width: 0 0 2 0;
-}
-
-.styled-table .table-row-cell:odd {
-    -fx-background-color: #F8F9FA;
-}
-.styled-table .table-row-cell:even {
-    -fx-background-color: white;
-}
-.styled-table .table-row-cell:selected {
-    -fx-background-color: -app-blue-light;
-    -fx-text-fill: #202124;
-}
-.styled-table .table-row-cell {
-    -fx-table-cell-border-color: -app-border;
-    -fx-pref-height: 32;
-}
-
-/* ── Badges de statut ────────────────────────────────────── */
-.badge {
-    -fx-padding: 2 10 2 10;
-    -fx-background-radius: 12;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-text-fill: white;
-}
-.badge-success  { -fx-background-color: #0F9D58; }
-.badge-danger   { -fx-background-color: #D93025; }
-.badge-warning  { -fx-background-color: #F29900; }
-.badge-info     { -fx-background-color: #1A73E8; }
-.badge-muted    { -fx-background-color: #9AA0A6; }
-.badge-purple   { -fx-background-color: #9334E6; }
-
-/* ── Boutons personnalisés ───────────────────────────────── */
-.btn-icon {
-    -fx-background-color: transparent;
-    -fx-border-width: 0;
-    -fx-cursor: hand;
-    -fx-font-size: 15px;
-}
-
-/* ── Champ de recherche ──────────────────────────────────── */
-.search-field {
-    -fx-pref-height: 32;
-    -fx-pref-width: 220;
-    -fx-font-size: 13px;
-}
-
-/* ── Alertes ─────────────────────────────────────────────── */
-.alert-panel-danger {
-    -fx-background-color: #FCE8E6;
-    -fx-border-color: #D93025;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
-    -fx-border-width: 1;
-    -fx-padding: 10 14 10 14;
-}
-
-.alert-panel-warning {
-    -fx-background-color: #FEF7E0;
-    -fx-border-color: #F29900;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
-    -fx-border-width: 1;
-    -fx-padding: 10 14 10 14;
-}
-
-.alert-panel-info {
-    -fx-background-color: #E8F0FE;
-    -fx-border-color: #1A73E8;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
-    -fx-border-width: 1;
-    -fx-padding: 10 14 10 14;
-}
-
-/* ── Panneau de contenu principal ────────────────────────── */
-.content-panel {
-    -fx-background-color: -app-bg;
-    -fx-padding: 20;
-}
-
-.section-divider {
-    -fx-pref-height: 1;
-    -fx-min-height: 1;
-    -fx-max-height: 1;
-    -fx-background-color: -app-border;
-}
-
-.dashboard-card {
     -fx-background-color: white;
     -fx-background-radius: 10;
-    -fx-border-color: -app-border;
-    -fx-border-radius: 10;
+    -fx-border-color: -app-bordure;
     -fx-border-width: 1;
-    -fx-padding: 14;
-    -fx-effect: -app-card-shadow;
+    -fx-border-radius: 10;
 }
-
-.shortcut-button {
-    -fx-background-color: #E7F1FC;
-    -fx-text-fill: #0B4D93;
-    -fx-font-size: 12px;
+.styled-table .column-header-background {
+    -fx-background-color: #F4EFE5;
+    -fx-background-radius: 10 10 0 0;
+}
+.styled-table .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -app-bordure transparent;
+    -fx-border-width: 0 0 2 0;
+}
+.styled-table .column-header .label {
+    -fx-text-fill: -app-bleu-moyen;
     -fx-font-weight: bold;
-    -fx-alignment: center;
-    -fx-content-display: top;
-    -fx-graphic-text-gap: 7;
-    -fx-background-radius: 8;
-    -fx-cursor: hand;
-}
-.shortcut-button:hover {
-    -fx-background-color: -color-accent-fg;
-    -fx-text-fill: white;
-}
-.shortcut-icon { -fx-icon-size: 20px; }
-
-/* ── Séparateur ──────────────────────────────────────────── */
-.separator-muted {
-    -fx-background-color: -app-border;
-}
-
-/* ── Label muted ─────────────────────────────────────────── */
-.text-muted {
-    -fx-text-fill: -app-text-muted;
     -fx-font-size: 11px;
+    -fx-padding: 8 10;
+}
+.styled-table .table-row-cell { -fx-cell-size: 34px; }
+.styled-table .table-row-cell:odd  { -fx-background-color: #FDFAF5; }
+.styled-table .table-row-cell:even { -fx-background-color: white; }
+.styled-table .table-row-cell:selected { -fx-background-color: #FFF3CC; }
+.styled-table .table-row-cell:hover    { -fx-background-color: #FFF8E8; }
+.styled-table .table-cell {
+    -fx-padding: 0 10;
+    -fx-font-size: 13px;
+    -fx-text-fill: -app-gris-texte;
 }
 
-.text-success { -fx-text-fill: #0F9D58; }
-.text-danger  { -fx-text-fill: #D93025; }
-.text-warning { -fx-text-fill: #F29900; }
-.text-primary { -fx-text-fill: #1A73E8; }
+/* ════════════════════════════════════════════════════════════
+   BADGES
+   ════════════════════════════════════════════════════════════ */
+.badge {
+    -fx-padding: 3 10 3 10;
+    -fx-background-radius: 20;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-min-width: 60;
+}
+.badge-success { -fx-background-color: -app-vert; }
+.badge-danger  { -fx-background-color: -app-rouge; }
+.badge-warning { -fx-background-color: -app-ambre; -fx-text-fill: -app-bleu-nuit; }
+.badge-info    { -fx-background-color: -app-bleu-moyen; }
+.badge-muted   { -fx-background-color: #8FA3B1; }
+.badge-purple  { -fx-background-color: #6A3D9A; }
+
+/* ════════════════════════════════════════════════════════════
+   ALERTES
+   ════════════════════════════════════════════════════════════ */
+.alert-danger  { -fx-background-color:#FDECEA; -fx-border-color:-app-rouge; -fx-border-width:0 0 0 4; -fx-background-radius:6; -fx-padding:10 14; }
+.alert-warning { -fx-background-color:#FFF8E1; -fx-border-color:-app-ambre; -fx-border-width:0 0 0 4; -fx-background-radius:6; -fx-padding:10 14; }
+.alert-info    { -fx-background-color:#E8F0FB; -fx-border-color:-app-bleu-moyen; -fx-border-width:0 0 0 4; -fx-background-radius:6; -fx-padding:10 14; }
+.alert-success { -fx-background-color:#EDF7EE; -fx-border-color:-app-vert; -fx-border-width:0 0 0 4; -fx-background-radius:6; -fx-padding:10 14; }
+
+/* ════════════════════════════════════════════════════════════
+   DIVERS
+   ════════════════════════════════════════════════════════════ */
+.search-field {
+    -fx-pref-height: 34; -fx-pref-width: 230; -fx-font-size: 13px;
+    -fx-background-radius: 20; -fx-border-radius: 20;
+}
+.btn-icon {
+    -fx-background-color: transparent; -fx-border-width: 0;
+    -fx-cursor: hand; -fx-padding: 4 8;
+}
+.btn-icon:hover { -fx-background-color: #FFF3CC; -fx-background-radius: 4; }
+.text-muted   { -fx-text-fill: #6B7A8D; -fx-font-size: 11px; }
+.text-success { -fx-text-fill: -app-vert; }
+.text-danger  { -fx-text-fill: -app-rouge; }
+.text-warning { -fx-text-fill: -app-ambre; }
+.text-primary { -fx-text-fill: -app-bleu-moyen; }
+.separator-muted { -fx-background-color: -app-bordure; }

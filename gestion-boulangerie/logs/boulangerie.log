@@ -71,3 +71,79 @@ java.sql.SQLException: Data truncated for column 'statut' at row 1
 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
 	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-04 12:11:15 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 12:11:15 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 12:11:16 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 12:22:18 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 12:22:18 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 12:22:19 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 12:22:38 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 12:24:22 [fx-panel-worker] ERROR c.b.dao.FicheJournaliereDAO - save fiche
+java.sql.SQLException: Data truncated for column 'statut' at row 1
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:130)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.FicheJournaliereDAO.save(FicheJournaliereDAO.java:101)
+	at com.boulangerie.ui.fx.SortiesFxPanel.lambda$nouvelleFiche$16(SortiesFxPanel.java:114)
+	at com.boulangerie.ui.fx.FxPanelBase.lambda$runAsync$3(FxPanelBase.java:213)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-04 12:46:08 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 12:46:09 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 12:46:10 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 12:46:47 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 12:47:18 [fx-panel-worker] ERROR c.b.dao.FicheJournaliereDAO - save fiche
+java.sql.SQLException: Data truncated for column 'statut' at row 1
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:130)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.FicheJournaliereDAO.save(FicheJournaliereDAO.java:101)
+	at com.boulangerie.ui.fx.SortiesFxPanel.lambda$nouvelleFiche$16(SortiesFxPanel.java:114)
+	at com.boulangerie.ui.fx.FxPanelBase.lambda$runAsync$3(FxPanelBase.java:213)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-04 12:57:24 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 12:57:24 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 12:57:25 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 12:57:39 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 13:11:40 [fx-panel-worker] ERROR c.b.dao.FicheJournaliereDAO - save fiche
+java.sql.SQLException: Data truncated for column 'statut' at row 1
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:130)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.FicheJournaliereDAO.save(FicheJournaliereDAO.java:101)
+	at com.boulangerie.ui.fx.SortiesFxPanel.lambda$nouvelleFiche$16(SortiesFxPanel.java:114)
+	at com.boulangerie.ui.fx.FxPanelBase.lambda$runAsync$3(FxPanelBase.java:213)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-04 13:15:54 [fx-panel-worker] INFO  c.b.service.DeblocageService - Client f4609b9a-a840-11f1-815f-5c5f671ca746 bloqué par admin
+2026-09-04 13:16:07 [fx-panel-worker] INFO  c.b.service.DeblocageService - Client f4609b9a-a840-11f1-815f-5c5f671ca746 débloqué exceptionnellement par admin
+2026-09-04 13:33:51 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 13:33:51 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 13:33:52 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 13:34:20 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 13:42:25 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 13:42:25 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 13:42:26 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 13:42:47 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)

@@ -94,12 +94,23 @@ public class ProduitsFxPanel extends FxPanelBase {
         // ── Footer ────────────────────────────────────────────────
         lblCount = footerCount("0 produits");
 
-        // ── Assemblage ────────────────────────────────────────────
-        VBox body = new VBox(10);
-        body.getChildren().addAll(
-            header("Catalogue Produits & Tarifs", toolbar.getChildren().toArray(new javafx.scene.Node[0])),
-            table, lblCount
-        );
+        // ── Assemblage avec image pain ────────────────────────────
+        var imgPain = loadImage("assets/Image 1 1.png", 42, 42);
+
+        // Titre + image
+        HBox titreRow = new HBox(10);
+        titreRow.setAlignment(Pos.CENTER_LEFT);
+        if (imgPain != null) titreRow.getChildren().add(imgPain);
+        Label titreLabel = sectionTitle("Catalogue Produits & Tarifs");
+        titreRow.getChildren().add(titreLabel);
+
+        Region accent = new Region();
+        accent.setStyle("-fx-background-color:#F5A623; -fx-pref-height:3; -fx-max-height:3; -fx-background-radius:2; -fx-pref-width:44;");
+
+        VBox hdr = new VBox(6, titreRow, accent, toolbar);
+        hdr.setPadding(new Insets(0, 0, 8, 0));
+
+        VBox body = new VBox(10, hdr, table, lblCount);
         body.setFillWidth(true);
         VBox.setVgrow(table, Priority.ALWAYS);
         root.setCenter(body);

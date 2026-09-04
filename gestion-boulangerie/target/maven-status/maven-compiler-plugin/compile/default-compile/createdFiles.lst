@@ -31,7 +31,6 @@ com/boulangerie/model/Facture$Statut.class
 com/boulangerie/ui/panels/CaissePanel$3.class
 com/boulangerie/ui/panels/ClientsPanel$3.class
 com/boulangerie/ui/panels/ProduitsPanel.class
-com/boulangerie/ui/fx/DashboardFxPanel$Shortcut.class
 com/boulangerie/ui/MainFrame$Refreshable.class
 com/boulangerie/dao/SoldeClientDAO.class
 com/boulangerie/ui/dialogs/AperçuFactureDialog.class
@@ -53,6 +52,7 @@ com/boulangerie/ui/fx/CaisseFxPanel.class
 com/boulangerie/service/DeblocageService.class
 com/boulangerie/ui/panels/ClientsPanel$4.class
 com/boulangerie/ui/panels/CaissePanel$2.class
+com/boulangerie/ui/fx/DashboardFxPanel$1Shortcut.class
 com/boulangerie/ui/fx/FacturationFxPanel$1.class
 com/boulangerie/ui/components/SearchField.class
 com/boulangerie/service/FacturationService.class
@@ -100,6 +100,7 @@ com/boulangerie/ui/panels/CaissePanel.class
 com/boulangerie/model/FicheJournaliere.class
 com/boulangerie/ui/dialogs/VersementRecuDialog.class
 com/boulangerie/ui/fx/AuditFxPanel$1.class
+com/boulangerie/ui/fx/DashboardFxPanel$KpiCard.class
 com/boulangerie/ui/LoginView$1.class
 com/boulangerie/ui/panels/UtilisateursPanel$2.class
 com/boulangerie/ui/components/StatusBadge.class

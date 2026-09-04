@@ -24,6 +24,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.Objects;
 
 /**
  * Fenêtre principale JavaFX — maximisée, responsive.
@@ -86,25 +87,34 @@ public class MainWindow {
         contentArea = new StackPane();
         contentArea.getStyleClass().add("content-panel");
 
-        root.setTop(buildNavBar());
+        HBox navBar = buildNavBar();
+        BorderPane.setAlignment(navBar, Pos.TOP_CENTER);
+        root.setTop(navBar);
         root.setCenter(contentArea);
         root.setBottom(buildStatusBar());
 
         var bounds = Screen.getPrimary().getVisualBounds();
         Scene scene = new Scene(root, bounds.getWidth(), bounds.getHeight());
         scene.getStylesheets().add(
-            getClass().getResource("/styles/app.css").toExternalForm());
+            Objects.requireNonNull(
+                getClass().getClassLoader().getResource("styles/app.css")
+            ).toExternalForm());
         installSessionActivityTracking(scene);
 
+        // Icône de la fenêtre principale
+        try {
+            var iconUrl = getClass().getClassLoader().getResource("assets/icone.png");
+            if (iconUrl != null) stage.getIcons().add(new javafx.scene.image.Image(iconUrl.toExternalForm()));
+        } catch (Exception ignored) {}
+
         stage.setScene(scene);
-        stage.setMaximized(true);          // Garantir la maximisation
-        stage.setMinWidth(1024);
-        stage.setMinHeight(640);
+        stage.setMaximized(true);
+        stage.setMinWidth(1024); stage.setMinHeight(640);
         stage.setTitle("Gestion Boulangerie — "
             + session.getUtilisateur().getNomComplet()
             + " | " + session.getUtilisateur().getRole().getNom());
         stage.show();
-        stage.setMaximized(true);          // Double appel = garanti même sur certains WM
+        stage.setMaximized(true);
 
         navigate(DASHBOARD);
         if (navButtons.containsKey(DASHBOARD)) {
@@ -130,16 +140,25 @@ public class MainWindow {
         nav.setAlignment(Pos.CENTER_LEFT);
         nav.getStyleClass().add("nav-bar");
 
-        // Logo
+        // Logo avec image
         HBox logoBox = new HBox(10);
         logoBox.setAlignment(Pos.CENTER_LEFT);
         logoBox.setPadding(new Insets(0, 16, 0, 10));
-        FontIcon logoIcon = new FontIcon(BootstrapIcons.BASKET2_FILL);
-        logoIcon.setIconColor(Color.web("#FBC02D"));
-        logoIcon.setIconSize(18);
+
+        // Essayer de charger le logo depuis les assets
+        try {
+            var logoUrl = getClass().getClassLoader().getResource("assets/logo.png");
+            if (logoUrl != null) {
+                javafx.scene.image.Image img = new javafx.scene.image.Image(
+                    logoUrl.toExternalForm(), 36, 36, true, true);
+                javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView(img);
+                logoBox.getChildren().add(iv);
+            }
+        } catch (Exception ignored) {}
+
         Label logo = new Label("Gestion Boulangerie");
         logo.getStyleClass().add("nav-logo");
-        logoBox.getChildren().addAll(logoIcon, logo);
+        logoBox.getChildren().add(logo);
 
         // Boutons filtrés selon le rôle connecté
         HBox navBtns = new HBox(4);
@@ -294,7 +313,9 @@ public class MainWindow {
         var bounds = Screen.getPrimary().getVisualBounds();
         Scene scene = new Scene(lv.getRoot(), bounds.getWidth(), bounds.getHeight());
         scene.getStylesheets().add(
-            getClass().getResource("/styles/app.css").toExternalForm());
+            Objects.requireNonNull(
+                getClass().getClassLoader().getResource("styles/app.css")
+            ).toExternalForm());
         stage.setScene(scene);
         stage.setMaximized(true);
     }
