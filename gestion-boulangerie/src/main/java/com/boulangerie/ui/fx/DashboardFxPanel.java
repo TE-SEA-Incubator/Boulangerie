@@ -225,18 +225,6 @@ public class DashboardFxPanel extends FxPanelBase {
         return card;
     }
 
-    /** Charge une image depuis le classpath */
-    private javafx.scene.image.ImageView loadImage(String path, double w, double h) {
-        try {
-            var url = getClass().getClassLoader().getResource(path);
-            if (url == null) return null;
-            var img = new javafx.scene.image.Image(url.toExternalForm(), w, h, true, true);
-            var iv  = new javafx.scene.image.ImageView(img);
-            iv.setFitWidth(w); iv.setFitHeight(h); iv.setPreserveRatio(true);
-            return iv;
-        } catch (Exception e) { return null; }
-    }
-
     // ── Refresh données ───────────────────────────────────────────
     @Override
     public void refresh() {

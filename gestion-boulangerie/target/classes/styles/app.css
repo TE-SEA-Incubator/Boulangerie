@@ -39,6 +39,8 @@
     -fx-background-color: -app-bleu-nuit;
     -fx-pref-height: 56; -fx-min-height: 56; -fx-max-height: 56;
     -fx-effect: dropshadow(gaussian, rgba(31,58,95,0.40), 10, 0, 0, 4);
+    -fx-border-color: transparent transparent rgba(0,0,0,0.2) transparent;
+    -fx-border-width: 0 0 1 0;
 }
 .nav-logo {
     -fx-font-size: 15px;

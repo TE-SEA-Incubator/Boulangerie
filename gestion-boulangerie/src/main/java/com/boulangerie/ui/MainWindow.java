@@ -81,17 +81,29 @@ public class MainWindow {
     }
 
     public void show() {
-        BorderPane root = new BorderPane();
-        root.getStyleClass().add("main-container");
+        // ── Layout racine : VBox (nav fixe + contenu flexible + status fixe) ──
+        // On évite BorderPane dont la région TOP absorbe la hauteur des enfants.
+        HBox navBar    = buildNavBar();
+        HBox statusBar = buildStatusBar();
 
+        // Contraintes Java STRICTES sur la navbar
+        navBar.setPrefHeight(56);
+        navBar.setMinHeight(56);
+        navBar.setMaxHeight(56);
+
+        // Contraintes Java STRICTES sur la status bar
+        statusBar.setPrefHeight(30);
+        statusBar.setMinHeight(30);
+        statusBar.setMaxHeight(30);
+
+        // Le contenu central prend tout le reste
         contentArea = new StackPane();
         contentArea.getStyleClass().add("content-panel");
+        VBox.setVgrow(contentArea, Priority.ALWAYS);
 
-        HBox navBar = buildNavBar();
-        BorderPane.setAlignment(navBar, Pos.TOP_CENTER);
-        root.setTop(navBar);
-        root.setCenter(contentArea);
-        root.setBottom(buildStatusBar());
+        VBox root = new VBox(navBar, contentArea, statusBar);
+        root.getStyleClass().add("main-container");
+        root.setFillWidth(true);
 
         var bounds = Screen.getPrimary().getVisualBounds();
         Scene scene = new Scene(root, bounds.getWidth(), bounds.getHeight());
@@ -136,22 +148,28 @@ public class MainWindow {
 
     // ── Barre de navigation filtrée par rôle ─────────────────────
     private HBox buildNavBar() {
-        HBox nav = new HBox();
+        HBox nav = new HBox(0);
         nav.setAlignment(Pos.CENTER_LEFT);
         nav.getStyleClass().add("nav-bar");
+        // IMPORTANT : contraindre la hauteur en Java pour que BorderPane respecte
+        nav.setPrefHeight(56);
+        nav.setMinHeight(56);
+        nav.setMaxHeight(56);
 
-        // Logo avec image
-        HBox logoBox = new HBox(10);
+        // Logo (taille fixe 32×32 pour ne pas pousser la hauteur)
+        HBox logoBox = new HBox(8);
         logoBox.setAlignment(Pos.CENTER_LEFT);
-        logoBox.setPadding(new Insets(0, 16, 0, 10));
+        logoBox.setPadding(new Insets(0, 12, 0, 12));
+        logoBox.setMinHeight(56); logoBox.setMaxHeight(56);
 
-        // Essayer de charger le logo depuis les assets
         try {
             var logoUrl = getClass().getClassLoader().getResource("assets/logo.png");
             if (logoUrl != null) {
                 javafx.scene.image.Image img = new javafx.scene.image.Image(
-                    logoUrl.toExternalForm(), 36, 36, true, true);
+                    logoUrl.toExternalForm(), 32, 32, true, true);
                 javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView(img);
+                iv.setFitWidth(32); iv.setFitHeight(32);
+                iv.setPreserveRatio(true);
                 logoBox.getChildren().add(iv);
             }
         } catch (Exception ignored) {}
@@ -160,9 +178,10 @@ public class MainWindow {
         logo.getStyleClass().add("nav-logo");
         logoBox.getChildren().add(logo);
 
-        // Boutons filtrés selon le rôle connecté
-        HBox navBtns = new HBox(4);
+        // Boutons de navigation filtrés par rôle
+        HBox navBtns = new HBox(0);
         navBtns.setAlignment(Pos.CENTER_LEFT);
+        navBtns.setMinHeight(56); navBtns.setMaxHeight(56);
         HBox.setHgrow(navBtns, Priority.ALWAYS);
 
         for (NavItem item : getAvailableNavItems()) {
@@ -171,7 +190,7 @@ public class MainWindow {
             navBtns.getChildren().add(btn);
         }
 
-        // Espace + utilisateur + déconnexion
+        // Espace flexible
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
@@ -181,23 +200,22 @@ public class MainWindow {
         userChip.setStyle("-fx-background-color:rgba(255,255,255,0.12); "
             + "-fx-background-radius:20; -fx-padding:4 12 4 12;");
         FontIcon userIcon = new FontIcon(BootstrapIcons.PERSON_CIRCLE);
-        userIcon.setIconSize(14);
+        userIcon.setIconSize(13);
         userIcon.setIconColor(Color.web("#EAF2FC"));
         Label lblUser = new Label(
             session.getUtilisateur().getNomComplet()
-            + "  ·  " + session.getUtilisateur().getRole().getNom().toUpperCase());
+            + "  ·  " + session.getUtilisateur().getRole().getNom());
         lblUser.setStyle("-fx-font-size:11px; -fx-text-fill:#EAF2FC;");
         userChip.getChildren().addAll(userIcon, lblUser);
 
         // Bouton déconnexion
         Button btnDeconn = new Button();
         FontIcon powerIcon = new FontIcon(BootstrapIcons.POWER);
-        powerIcon.setIconSize(15);
-        powerIcon.setIconColor(Color.web("#FF6B6B"));
+        powerIcon.setIconSize(14);
+        powerIcon.setIconColor(Color.web("#FF8080"));
         btnDeconn.setGraphic(powerIcon);
         btnDeconn.setTooltip(new Tooltip("Déconnexion"));
-        btnDeconn.setStyle("-fx-background-color:transparent; -fx-cursor:hand; "
-            + "-fx-padding:0 12 0 8;");
+        btnDeconn.setStyle("-fx-background-color:transparent; -fx-cursor:hand; -fx-padding:0 12 0 8;");
         btnDeconn.setOnAction(e -> deconnecter());
 
         nav.getChildren().addAll(logoBox, navBtns, spacer, userChip, btnDeconn);
@@ -208,8 +226,12 @@ public class MainWindow {
     private Button makeNavBtn(NavItem item) {
         Button btn = new Button(item.label());
         btn.getStyleClass().add("nav-button");
+        // Hauteur forcée en Java pour garantir 56px
+        btn.setPrefHeight(56);
+        btn.setMinHeight(56);
+        btn.setMaxHeight(56);
         FontIcon icon = new FontIcon(item.icon());
-        icon.setIconSize(14);
+        icon.setIconSize(13);
         icon.setIconColor(Color.web("#EAF2FC"));
         btn.setGraphic(icon);
         btn.setOnAction(e -> {
