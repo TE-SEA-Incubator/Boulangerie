@@ -20,7 +20,7 @@ jobs:
         cache: maven
         
     - name: Build with Maven
-      run: mvn -B clean package --file pom.xml
+      run: mvn -B clean package --file gestion-boulangerie/pom.xml
       
     - name: Install WiX Toolset
       run: |
@@ -31,7 +31,7 @@ jobs:
       shell: bash
       run: |
         jpackage --name "GestionBoulangerie" \
-                 --input target \
+                 --input gestion-boulangerie/target \
                  --main-jar gestion-boulangerie-1.0.0.jar \
                  --main-class com.boulangerie.MainApp \
                  --type exe \
