@@ -20,8 +20,13 @@ jobs:
         cache: maven
         
     - name: Build with Maven
-      run: mvn -B package --file gestion-boulangerie/pom.xml
+      run: mvn -B clean package --file gestion-boulangerie/pom.xml
       
+    - name: Install WiX Toolset
+      run: |
+        # Requis pour jpackage afin de créer des installateurs .exe/.msi
+        choco install wixtoolset -y
+
     - name: Create Windows Executable
       shell: bash
       run: |
