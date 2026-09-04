@@ -99,11 +99,23 @@ public class MainWindow {
         // Le contenu central prend tout le reste
         contentArea = new StackPane();
         contentArea.getStyleClass().add("content-panel");
-        VBox.setVgrow(contentArea, Priority.ALWAYS);
 
-        VBox root = new VBox(navBar, contentArea, statusBar);
+        AnchorPane root = new AnchorPane(navBar, contentArea, statusBar);
         root.getStyleClass().add("main-container");
-        root.setFillWidth(true);
+
+        // Layout avec AnchorPane pour forcer le remplissage
+        AnchorPane.setTopAnchor(navBar, 40.0); // Décalé de 40px vers le bas
+        AnchorPane.setLeftAnchor(navBar, 0.0);
+        AnchorPane.setRightAnchor(navBar, 0.0);
+
+        AnchorPane.setTopAnchor(contentArea, 96.0); // 56 (navbar) + 40 (offset)
+        AnchorPane.setBottomAnchor(contentArea, 30.0); // Hauteur de la status bar
+        AnchorPane.setLeftAnchor(contentArea, 0.0);
+        AnchorPane.setRightAnchor(contentArea, 0.0);
+
+        AnchorPane.setBottomAnchor(statusBar, 0.0);
+        AnchorPane.setLeftAnchor(statusBar, 0.0);
+        AnchorPane.setRightAnchor(statusBar, 0.0);
 
         var bounds = Screen.getPrimary().getVisualBounds();
         Scene scene = new Scene(root, bounds.getWidth(), bounds.getHeight());
