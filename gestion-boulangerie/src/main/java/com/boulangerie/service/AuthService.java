@@ -15,30 +15,41 @@ public class AuthService {
     private final UtilisateurDAO utilisateurDAO = new UtilisateurDAO();
     private final AuditDAO auditDAO = new AuditDAO();
     private final SessionService session = SessionService.getInstance();
+    private final LoginAttemptService loginAttemptService = LoginAttemptService.getInstance();
 
     /**
      * Tente la connexion. Retourne l'utilisateur si succès.
      * @throws IllegalArgumentException si identifiants incorrects ou compte inactif.
      */
     public Utilisateur connecter(String login, String motDePasse) {
-        Optional<Utilisateur> opt = utilisateurDAO.findByLogin(login.trim());
+        String loginNormalise = login == null ? "" : login.trim();
+        loginAttemptService.verifierAutorisation(loginNormalise);
+
+        Optional<Utilisateur> opt = utilisateurDAO.findByLogin(loginNormalise);
         if (opt.isEmpty()) {
-            auditDAO.log(new JournalAudit("Utilisateur", null, JournalAudit.LOGIN, null, login, "Échec: identifiant inconnu"));
-            throw new IllegalArgumentException("Identifiant ou mot de passe incorrect.");
+            auditDAO.log(new JournalAudit(
+                "Utilisateur", null, JournalAudit.LOGIN, null, loginNormalise, "Échec: identifiant inconnu"));
+            throw new IllegalArgumentException(loginAttemptService.enregistrerEchec(loginNormalise));
         }
         Utilisateur u = opt.get();
         if (!u.isActif()) {
+            auditDAO.log(new JournalAudit(
+                "Utilisateur", u.getId(), JournalAudit.LOGIN, u.getId(), loginNormalise, "Échec: compte désactivé"));
+            loginAttemptService.enregistrerEchec(loginNormalise);
             throw new IllegalArgumentException("Ce compte est désactivé. Contactez l'administrateur.");
         }
         if (!BCrypt.checkpw(motDePasse, u.getMotDePasse())) {
-            auditDAO.log(new JournalAudit("Utilisateur", u.getId(), JournalAudit.LOGIN, u.getId(), login, "Échec: mot de passe incorrect"));
-            throw new IllegalArgumentException("Identifiant ou mot de passe incorrect.");
+            auditDAO.log(new JournalAudit(
+                "Utilisateur", u.getId(), JournalAudit.LOGIN, u.getId(), loginNormalise, "Échec: mot de passe incorrect"));
+            throw new IllegalArgumentException(loginAttemptService.enregistrerEchec(loginNormalise));
         }
         // Succès
+        loginAttemptService.reinitialiser(loginNormalise);
         session.ouvrir(u);
         utilisateurDAO.updateDerniereConnexion(u.getId());
-        auditDAO.log(new JournalAudit("Utilisateur", u.getId(), JournalAudit.LOGIN, u.getId(), login, "Connexion réussie"));
-        log.info("Connexion réussie: {} ({})", login, u.getRole().getNom());
+        auditDAO.log(new JournalAudit(
+            "Utilisateur", u.getId(), JournalAudit.LOGIN, u.getId(), loginNormalise, "Connexion réussie"));
+        log.info("Connexion réussie: {} ({})", loginNormalise, u.getRole().getNom());
         return u;
     }
 
