@@ -171,3 +171,18 @@ java.sql.SQLException: Data truncated for column 'statut' at row 1
 2026-09-04 14:22:29 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
 2026-09-04 14:22:31 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
 2026-09-04 14:22:40 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 14:42:03 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 14:42:03 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 14:42:04 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 14:42:13 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 14:46:09 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 14:46:09 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 14:46:10 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 14:46:22 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 14:48:25 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 14:48:25 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 14:48:26 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-04 14:48:37 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-04 14:52:00 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-04 14:52:00 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
+2026-09-04 14:52:01 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
