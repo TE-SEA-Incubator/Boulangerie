@@ -23,7 +23,8 @@ public class DatabaseInitializer {
     public static void init() throws Exception {
         // Vérifier si les tables existent déjà
         if (tablesExistent()) {
-            log.info("Tables déjà présentes — initialisation ignorée.");
+            log.info("Tables déjà présentes — vérification des migrations nécessaires...");
+            appliquerMigrations();
             return;
         }
 
@@ -81,6 +82,26 @@ public class DatabaseInitializer {
         } catch (Exception e) {
             log.warn("Vérification tables: {}", e.getMessage());
             return false;
+        }
+    }
+
+    private static void appliquerMigrations() {
+        try (Connection c = DatabaseConnection.getInstance().getConnection();
+             Statement st = c.createStatement()) {
+            // Migration Produit: prix_unitaire
+            try {
+                st.execute("ALTER TABLE produit ADD COLUMN prix_unitaire DECIMAL(15,2) NOT NULL DEFAULT 0");
+            } catch (Exception ignored) {}
+            // Migration Client: adresse
+            try {
+                st.execute("ALTER TABLE client ADD COLUMN adresse VARCHAR(255)");
+            } catch (Exception ignored) {}
+            try {
+                st.execute("UPDATE client SET adresse = ville WHERE (adresse IS NULL OR adresse = '') AND ville IS NOT NULL");
+            } catch (Exception ignored) {}
+            log.info("Migrations automatiques appliquées avec succès.");
+        } catch (Exception e) {
+            log.warn("Migration check error: {}", e.getMessage());
         }
     }
 }

@@ -88,12 +88,22 @@ public class ClientDAO {
         return Optional.empty();
     }
 
+    public String genererCode() {
+        int count = 1;
+        try (Connection c = db.getConnection();
+             Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM client")) {
+            if (rs.next()) count = rs.getInt(1) + 1;
+        } catch (SQLException ignored) {}
+        return String.format("CLI-%03d", count);
+    }
+
     public String save(Client client) {
         String sql = """
-            INSERT INTO client (id, code, nom, quartier, ville, telephone, email,
+            INSERT INTO client (id, code, nom, quartier, adresse, telephone, email,
             categorie_id, est_anonyme, type_client, livreur_rattache,
-            delai_paiement, plafond_credit, solde_precedent, solde_actuel, statut, notes)
-            VALUES (UUID(),?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            solde_precedent, solde_actuel, statut, notes)
+            VALUES (UUID(),?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -108,15 +118,15 @@ public class ClientDAO {
 
     public void update(Client client) {
         String sql = """
-            UPDATE client SET code=?,nom=?,quartier=?,ville=?,telephone=?,email=?,
+            UPDATE client SET code=?,nom=?,quartier=?,adresse=?,telephone=?,email=?,
             categorie_id=?,est_anonyme=?,type_client=?,livreur_rattache=?,
-            delai_paiement=?,plafond_credit=?,solde_precedent=?,solde_actuel=?,statut=?,notes=?
+            solde_precedent=?,solde_actuel=?,statut=?,notes=?
             WHERE id=?
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             setClientParams(ps, client);
-            ps.setString(17, client.getId());
+            ps.setString(15, client.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             log.error("update client", e);
@@ -217,19 +227,17 @@ public class ClientDAO {
         ps.setString(1, client.getCode());
         ps.setString(2, client.getNom());
         ps.setString(3, client.getQuartier());
-        ps.setString(4, client.getVille());
+        ps.setString(4, client.getAdresse());
         ps.setString(5, client.getTelephone());
         ps.setString(6, client.getEmail());
         ps.setString(7, client.getCategorie() != null ? client.getCategorie().getId() : null);
         ps.setBoolean(8, client.isEstAnonyme());
         ps.setString(9, client.getTypeClient().name());
         ps.setString(10, client.getLivreurRattache() != null ? client.getLivreurRattache().getId() : null);
-        ps.setInt(11, client.getDelaiPaiement());
-        ps.setBigDecimal(12, client.getPlafondCredit());
-        ps.setBigDecimal(13, client.getSoldePrecedent());
-        ps.setBigDecimal(14, client.getSoldeActuel());
-        ps.setString(15, client.getStatut().name());
-        ps.setString(16, client.getNotes());
+        ps.setBigDecimal(11, client.getSoldePrecedent());
+        ps.setBigDecimal(12, client.getSoldeActuel());
+        ps.setString(13, client.getStatut().name());
+        ps.setString(14, client.getNotes());
     }
 
     private String findIdByCode(String code, Connection c) throws SQLException {
@@ -246,14 +254,18 @@ public class ClientDAO {
         cl.setCode(rs.getString("code"));
         cl.setNom(rs.getString("nom"));
         cl.setQuartier(rs.getString("quartier"));
-        cl.setVille(rs.getString("ville"));
+        try {
+            String adr = rs.getString("adresse");
+            if (adr == null) adr = rs.getString("ville");
+            cl.setAdresse(adr);
+        } catch (SQLException e) {
+            try { cl.setAdresse(rs.getString("ville")); } catch (SQLException ignored) {}
+        }
         cl.setTelephone(rs.getString("telephone"));
         cl.setEmail(rs.getString("email"));
         cl.setEstAnonyme(rs.getBoolean("est_anonyme"));
         String tc = rs.getString("type_client");
         if (tc != null) cl.setTypeClient(Client.TypeClient.valueOf(tc));
-        cl.setDelaiPaiement(rs.getInt("delai_paiement"));
-        cl.setPlafondCredit(rs.getBigDecimal("plafond_credit"));
         cl.setSoldePrecedent(rs.getBigDecimal("solde_precedent"));
         cl.setSoldeActuel(rs.getBigDecimal("solde_actuel"));
         String st = rs.getString("statut");

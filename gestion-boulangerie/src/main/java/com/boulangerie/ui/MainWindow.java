@@ -67,7 +67,6 @@ public class MainWindow {
         new NavItem("Produits", PRODUITS, "PRODUIT_READ", BootstrapIcons.BOX_SEAM),
         new NavItem("Clients", CLIENTS, "CLIENT_READ", BootstrapIcons.PEOPLE_FILL),
         new NavItem("Sorties", SORTIES, "SORTIE_READ", BootstrapIcons.JOURNAL_TEXT),
-        new NavItem("Facturation", FACTURATION, "FACTURATION_READ", BootstrapIcons.RECEIPT_CUTOFF),
         new NavItem("Caisse", CAISSE, "CAISSE_READ", BootstrapIcons.CASH_STACK),
         new NavItem("Recouvrement", RECOUVREMENT, "RECOUVREMENT_READ", BootstrapIcons.BAR_CHART_FILL),
         new NavItem("Utilisateurs", UTILISATEURS, "USER_WRITE", BootstrapIcons.PEOPLE_FILL),
@@ -140,9 +139,14 @@ public class MainWindow {
         stage.show();
         stage.setMaximized(true);
 
-        navigate(DASHBOARD);
-        if (navButtons.containsKey(DASHBOARD)) {
-            setActiveNavBtn(navButtons.get(DASHBOARD));
+        boolean isCaissier = session.getUtilisateur() != null
+            && session.getUtilisateur().getRole() != null
+            && "CAISSIER".equalsIgnoreCase(session.getUtilisateur().getRole().getNom());
+
+        String initialView = isCaissier ? CAISSE : DASHBOARD;
+        navigate(initialView);
+        if (navButtons.containsKey(initialView)) {
+            setActiveNavBtn(navButtons.get(initialView));
         }
 
         // Horloge
@@ -377,9 +381,18 @@ public class MainWindow {
     public Stage          getStage()   { return stage; }
 
     private List<NavItem> getAvailableNavItems() {
+        boolean isCaissier = session.getUtilisateur() != null
+            && session.getUtilisateur().getRole() != null
+            && "CAISSIER".equalsIgnoreCase(session.getUtilisateur().getRole().getNom());
+
         List<NavItem> items = new ArrayList<>();
         for (NavItem item : NAV_ITEMS) {
-            if (item.permissionCode() == null || session.hasPermission(item.permissionCode()) || session.isAdmin()) {
+            if (isCaissier) {
+                // Pour la caissière, l'interface accessible est Caisse
+                if (CAISSE.equals(item.key())) {
+                    items.add(item);
+                }
+            } else if (item.permissionCode() == null || session.hasPermission(item.permissionCode()) || session.isAdmin()) {
                 items.add(item);
             }
         }

@@ -400,6 +400,139 @@ public class PdfService {
         }
     }
 
+    // ── Fiche de Sortie Journalière (conforme modèle Excel/Docx) ──
+    public static void exporterFicheSortie(LocalDate date, List<LigneSortie> lignes, String cheminPdf) throws Exception {
+        try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(cheminPdf));
+             Document doc = new Document(pdfDoc, PageSize.A4.rotate())) {
+
+            doc.setMargins(25, 25, 25, 25);
+            PdfFont fontBold = getFont(true);
+            PdfFont fontNorm = getFont(false);
+
+            ajouterTitrePage(doc, "FICHE JOURNALIÈRE DE SORTIES — " + FormatUtil.date(date), fontBold, fontNorm);
+
+            Table table = new Table(UnitValue.createPercentArray(new float[]{6, 24, 26, 11, 11, 11, 11}))
+                .useAllAvailableWidth();
+
+            table.addHeaderCell(headerCell("N°", fontBold));
+            table.addHeaderCell(headerCell("Client / Livreur", fontBold));
+            table.addHeaderCell(headerCell("Désignation Produit", fontBold));
+            table.addHeaderCell(headerCell("Sorties", fontBold));
+            table.addHeaderCell(headerCell("Retours", fontBold));
+            table.addHeaderCell(headerCell("Qté Nette", fontBold));
+            table.addHeaderCell(headerCell("Montant (FCFA)", fontBold));
+
+            int totalSortie = 0, totalRetour = 0, totalNet = 0;
+            java.math.BigDecimal totalMontant = java.math.BigDecimal.ZERO;
+
+            int idx = 1;
+            for (LigneSortie l : lignes) {
+                table.addCell(dataCell(String.valueOf(idx++), fontNorm));
+                table.addCell(dataCell(l.getClient() != null ? l.getClient().getNom() : "—", fontBold));
+                table.addCell(dataCell(l.getProduit() != null ? l.getProduit().getLibelle() : "—", fontNorm));
+                table.addCell(dataCellRight(String.valueOf(l.getQuantiteSortie()), fontNorm));
+                table.addCell(dataCellRight(String.valueOf(l.getQuantiteRetournee()), fontNorm));
+                table.addCell(dataCellRight(String.valueOf(l.getQuantiteNette()), fontBold));
+                table.addCell(dataCellRight(FormatUtil.montant(l.getMontantHt()), fontBold));
+
+                totalSortie += l.getQuantiteSortie();
+                totalRetour += l.getQuantiteRetournee();
+                totalNet += l.getQuantiteNette();
+                if (l.getMontantHt() != null) totalMontant = totalMontant.add(l.getMontantHt());
+            }
+
+            // Ligne total
+            table.addCell(new Cell(1, 3).add(new Paragraph("TOTAUX GÉNÉRAUX").setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND));
+            table.addCell(new Cell().add(new Paragraph(String.valueOf(totalSortie)).setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT));
+            table.addCell(new Cell().add(new Paragraph(String.valueOf(totalRetour)).setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT));
+            table.addCell(new Cell().add(new Paragraph(String.valueOf(totalNet)).setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT));
+            table.addCell(new Cell().add(new Paragraph(FormatUtil.montant(totalMontant)).setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT));
+
+            doc.add(table);
+            ajouterPiedPage(doc, fontNorm);
+        }
+    }
+
+    // ── Fiche de Facturation & Caisse Journalière (conforme modèle Excel FICHE DE FACTURATION) ──
+    public static void exporterFicheCaisse(LocalDate date, List<com.boulangerie.model.FicheCaisseLigne> lignes, String cheminPdf) throws Exception {
+        try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(cheminPdf));
+             Document doc = new Document(pdfDoc, PageSize.A4.rotate())) {
+
+            doc.setMargins(25, 25, 25, 25);
+            PdfFont fontBold = getFont(true);
+            PdfFont fontNorm = getFont(false);
+
+            ajouterTitrePage(doc, "FICHE DE FACTURATION & CAISSE — Date : " + FormatUtil.date(date), fontBold, fontNorm);
+
+            Table table = new Table(UnitValue.createPercentArray(new float[]{4, 18, 22, 11, 11, 11, 11, 12}))
+                .useAllAvailableWidth();
+
+            table.addHeaderCell(headerCell("N°", fontBold));
+            table.addHeaderCell(headerCell("Nom Livreur / Client", fontBold));
+            table.addHeaderCell(headerCell("Sorties (Produits & Qtés)", fontBold));
+            table.addHeaderCell(headerCell("Facture Jour", fontBold));
+            table.addHeaderCell(headerCell("Écart Précédent", fontBold));
+            table.addHeaderCell(headerCell("Total Solde", fontBold));
+            table.addHeaderCell(headerCell("Versement Reçu", fontBold));
+            table.addHeaderCell(headerCell("Reste Dû", fontBold));
+
+            java.math.BigDecimal totFac = java.math.BigDecimal.ZERO;
+            java.math.BigDecimal totEcartPrec = java.math.BigDecimal.ZERO;
+            java.math.BigDecimal totSolde = java.math.BigDecimal.ZERO;
+            java.math.BigDecimal totVers = java.math.BigDecimal.ZERO;
+            java.math.BigDecimal totReste = java.math.BigDecimal.ZERO;
+
+            int idx = 1;
+            for (com.boulangerie.model.FicheCaisseLigne fl : lignes) {
+                table.addCell(dataCell(String.valueOf(idx++), fontNorm));
+                table.addCell(dataCell(fl.getClient() != null ? fl.getClient().getNom() : "—", fontBold));
+                table.addCell(dataCell(fl.getResumeSorties().isEmpty() ? "—" : fl.getResumeSorties(), fontNorm));
+                table.addCell(dataCellRight(FormatUtil.montant(fl.getMontantFacture()), fontNorm));
+                table.addCell(dataCellRight(FormatUtil.montant(fl.getSoldePrecedent()), fontNorm));
+                table.addCell(dataCellRight(FormatUtil.montant(fl.getTotalSolde()), fontBold));
+                table.addCell(dataCellRight(FormatUtil.montant(fl.getMontantVerse()), fontBold));
+
+                Cell cellReste = dataCellRight(FormatUtil.montant(fl.getReste()), fontBold);
+                if (fl.getReste().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                    cellReste.setFontColor(ROUGE);
+                } else {
+                    cellReste.setFontColor(VERT);
+                }
+                table.addCell(cellReste);
+
+                totFac = totFac.add(fl.getMontantFacture());
+                totEcartPrec = totEcartPrec.add(fl.getSoldePrecedent());
+                totSolde = totSolde.add(fl.getTotalSolde());
+                totVers = totVers.add(fl.getMontantVerse());
+                totReste = totReste.add(fl.getReste());
+            }
+
+            // Ligne totale
+            table.addCell(new Cell(1, 3).add(new Paragraph("TOTAUX DE LA JOURNÉE").setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND));
+            table.addCell(new Cell().add(new Paragraph(FormatUtil.montant(totFac)).setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT));
+            table.addCell(new Cell().add(new Paragraph(FormatUtil.montant(totEcartPrec)).setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT));
+            table.addCell(new Cell().add(new Paragraph(FormatUtil.montant(totSolde)).setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT));
+            table.addCell(new Cell().add(new Paragraph(FormatUtil.montant(totVers)).setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT));
+            Cell cTotReste = new Cell().add(new Paragraph(FormatUtil.montant(totReste)).setFont(fontBold).setFontSize(9))
+                .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT);
+            cTotReste.setFontColor(totReste.compareTo(java.math.BigDecimal.ZERO) > 0 ? ROUGE : VERT);
+            table.addCell(cTotReste);
+
+            doc.add(table);
+            ajouterPiedPage(doc, fontNorm);
+        }
+    }
+
     private static void ajouterTitrePage(Document doc, String titre, PdfFont fontBold, PdfFont fontNorm) throws IOException {
         doc.add(new Paragraph("🥖 BOULANGERIE — " + titre)
             .setFont(fontBold).setFontSize(14).setFontColor(MARRON)

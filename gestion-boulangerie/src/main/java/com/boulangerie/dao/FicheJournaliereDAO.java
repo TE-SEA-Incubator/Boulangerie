@@ -193,6 +193,103 @@ public class FicheJournaliereDAO {
         }
     }
 
+    public List<LigneSortie> findLignesByDate(LocalDate date) {
+        List<LigneSortie> list = new ArrayList<>();
+        String sql = """
+            SELECT ls.*,
+                   cl.id AS cl_id, cl.code AS cl_code, cl.nom AS cl_nom, cl.adresse AS cl_adr, cl.solde_actuel AS cl_solde,
+                   p.id AS p_id, p.code AS p_code, p.libelle AS p_lib, p.prix_unitaire AS p_prix,
+                   fj.id AS fj_id, fj.numero AS fj_num, fj.date_fiche AS fj_date,
+                   u.id AS liv_id, u.nom_complet AS liv_nom
+            FROM ligne_sortie ls
+            JOIN fiche_journaliere fj ON ls.fiche_id = fj.id
+            JOIN client cl ON ls.client_id = cl.id
+            JOIN produit p ON ls.produit_id = p.id
+            LEFT JOIN utilisateur u ON fj.livreur_id = u.id
+            WHERE fj.date_fiche = ?
+            ORDER BY cl.nom, p.libelle
+            """;
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(date));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                LigneSortie l = new LigneSortie();
+                l.setId(rs.getString("id"));
+                l.setFicheId(rs.getString("fiche_id"));
+                l.setQuantiteSortie(rs.getInt("quantite_sortie"));
+                l.setQuantiteRetournee(rs.getInt("quantite_retournee"));
+                l.setTarifApplicable(rs.getBigDecimal("tarif_applicable"));
+                l.setTypeTarif(rs.getString("type_tarif"));
+                l.setRemisePct(rs.getBigDecimal("remise_pct"));
+                l.setMontantHt(rs.getBigDecimal("montant_ht"));
+                l.setMotifRetour(rs.getString("motif_retour"));
+
+                Client cl = new Client();
+                cl.setId(rs.getString("cl_id"));
+                cl.setCode(rs.getString("cl_code"));
+                cl.setNom(rs.getString("cl_nom"));
+                cl.setAdresse(rs.getString("cl_adr"));
+                cl.setSoldeActuel(rs.getBigDecimal("cl_solde"));
+                l.setClient(cl);
+
+                Produit p = new Produit();
+                p.setId(rs.getString("p_id"));
+                p.setCode(rs.getString("p_code"));
+                p.setLibelle(rs.getString("p_lib"));
+                p.setPrixUnitaire(rs.getBigDecimal("p_prix"));
+                l.setProduit(p);
+
+                list.add(l);
+            }
+        } catch (SQLException e) {
+            log.error("findLignesByDate {}", date, e);
+        }
+        return list;
+    }
+
+    public FicheJournaliere getOrCreateFicheJour(LocalDate date, Utilisateur livreur, String creePar) {
+        String livId = livreur != null ? livreur.getId() : null;
+        List<FicheJournaliere> fiches = findByFilters(date, date, livId, null);
+        if (!fiches.isEmpty()) {
+            return findById(fiches.get(0).getId()).orElse(fiches.get(0));
+        }
+        FicheJournaliere f = new FicheJournaliere();
+        f.setDateFiche(date);
+        f.setNumero(genererNumero(date));
+        if (livreur != null) {
+            f.setLivreur(livreur);
+        } else {
+            List<Utilisateur> livs = new UtilisateurDAO().findLivreurs();
+            f.setLivreur(!livs.isEmpty() ? livs.get(0) : new UtilisateurDAO().findAll().stream().findFirst().orElse(null));
+        }
+        f.setStatut(FicheJournaliere.Statut.EnCours);
+        f.setCreePar(creePar);
+        String id = save(f);
+        f.setId(id);
+        return f;
+    }
+
+    public void recalculerTotauxFiche(String ficheId) {
+        String sql = """
+            UPDATE fiche_journaliere
+            SET total_sorties = COALESCE((SELECT SUM(quantite_sortie * tarif_applicable) FROM ligne_sortie WHERE fiche_id=?), 0),
+                total_retours = COALESCE((SELECT SUM(quantite_retournee * tarif_applicable) FROM ligne_sortie WHERE fiche_id=?), 0),
+                total_net     = COALESCE((SELECT SUM(montant_ht) FROM ligne_sortie WHERE fiche_id=?), 0)
+            WHERE id=?
+            """;
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, ficheId);
+            ps.setString(2, ficheId);
+            ps.setString(3, ficheId);
+            ps.setString(4, ficheId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            log.error("recalculerTotauxFiche {}", ficheId, e);
+        }
+    }
+
     // ── Statistiques dashboard ───────────────────────────────────
     public BigDecimal getSortiesNettesJour(LocalDate date) {
         String sql = "SELECT COALESCE(SUM(total_net),0) FROM fiche_journaliere WHERE date_fiche=?";

@@ -1,32 +1,50 @@
 package com.boulangerie.ui.fx;
 
-import com.boulangerie.dao.*;
-import com.boulangerie.model.*;
-import com.boulangerie.service.FacturationService;
+import com.boulangerie.dao.ClientDAO;
+import com.boulangerie.dao.FicheJournaliereDAO;
+import com.boulangerie.dao.ProduitDAO;
+import com.boulangerie.model.Client;
+import com.boulangerie.model.FicheJournaliere;
+import com.boulangerie.model.LigneSortie;
+import com.boulangerie.model.Produit;
+import com.boulangerie.service.ExcelExportService;
+import com.boulangerie.service.PdfService;
 import com.boulangerie.service.SessionService;
-import com.boulangerie.service.TarifService;
 import com.boulangerie.ui.MainWindow;
 import com.boulangerie.util.FormatUtil;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 
+import java.io.File;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Module Sorties — Enregistrement des produits sortis (pains, viennoiseries, pâtisseries...)
+ * par client/livreur et génération des fiches de sortie conformes aux documents Excel.
+ */
 public class SortiesFxPanel extends FxPanelBase {
 
-    private final FicheJournaliereDAO ficheDAO   = new FicheJournaliereDAO();
-    private final FacturationService  factService = new FacturationService();
-    private final SessionService      session    = SessionService.getInstance();
+    private final FicheJournaliereDAO ficheDAO = new FicheJournaliereDAO();
+    private final ProduitDAO produitDAO = new ProduitDAO();
+    private final ClientDAO clientDAO = new ClientDAO();
+    private final SessionService session = SessionService.getInstance();
 
-    private TableView<FicheJournaliere>       table;
-    private ObservableList<FicheJournaliere>  data = FXCollections.observableArrayList();
-    private Label                             lblTotaux;
+    private DatePicker dpDate;
+    private TextField txtRecherche;
+    private TableView<LigneSortie> table;
+    private ObservableList<LigneSortie> data = FXCollections.observableArrayList();
+    private List<LigneSortie> allLignes = List.of();
+
+    private Label lblTotalSorties, lblTotalRetours, lblTotalNettes, lblMontantTotal;
 
     public SortiesFxPanel(MainWindow mainWindow) {
         super(mainWindow);
@@ -34,222 +52,383 @@ public class SortiesFxPanel extends FxPanelBase {
     }
 
     private void buildUI() {
-        Button btnNouv = btnPrimary("+ Nouvelle fiche", BootstrapIcons.PLUS_CIRCLE);
-        Button btnClot  = btnDanger("Clôturer + Facturer", BootstrapIcons.CHECK2_CIRCLE);
-        Button btnRefr  = btnOutline("⟳ Actualiser");
+        // Sélecteur de date
+        dpDate = new DatePicker(LocalDate.now());
+        dpDate.setPrefWidth(140);
+        dpDate.setOnAction(e -> refresh());
 
-        btnNouv.setOnAction(e  -> nouvelleFiche());
-        btnClot.setOnAction(e  -> cloturerSelection());
-        btnRefr.setOnAction(e  -> refresh());
+        // Barre de recherche
+        txtRecherche = new TextField();
+        txtRecherche.setPromptText("Rechercher client, livreur, produit...");
+        txtRecherche.setPrefWidth(240);
+        txtRecherche.textProperty().addListener((obs, ov, nv) -> filtrer());
 
+        // Boutons
+        Button btnAjouter = btnPrimary("+ Enregistrer une sortie", BootstrapIcons.PLUS_CIRCLE);
+        Button btnPDF = btnOutline("📄 Fiche de sortie (PDF)");
+        Button btnExcel = btnOutline("📊 Exporter Excel");
+        Button btnRefr = btnOutline("⟳ Actualiser");
+
+        btnAjouter.setOnAction(e -> ouvrirFormulaireSortie(null));
+        btnPDF.setOnAction(e -> exporterFichePDF());
+        btnExcel.setOnAction(e -> exporterFicheExcel());
+        btnRefr.setOnAction(e -> refresh());
+
+        HBox toolBar = new HBox(10,
+            new Label("Date :"), dpDate,
+            txtRecherche,
+            btnAjouter, btnPDF, btnExcel, btnRefr
+        );
+        toolBar.setAlignment(Pos.CENTER_LEFT);
+        toolBar.setPadding(new Insets(0, 0, 8, 0));
+
+        // Table
         table = styledTable();
         table.setItems(data);
-        table.setOnMouseClicked(e -> { if(e.getClickCount()==2) ouvrirSaisie(table.getSelectionModel().getSelectedItem()); });
 
-        TableColumn<FicheJournaliere,String> colNum  = new TableColumn<>("N° Fiche");
-        TableColumn<FicheJournaliere,String> colDate = new TableColumn<>("Date");
-        TableColumn<FicheJournaliere,String> colLiv  = new TableColumn<>("Livreur");
-        TableColumn<FicheJournaliere,String> colStat = new TableColumn<>("État");
-        TableColumn<FicheJournaliere,String> colLig  = new TableColumn<>("Nb lignes");
-        TableColumn<FicheJournaliere,String> colSort = new TableColumn<>("Total sorties");
-        TableColumn<FicheJournaliere,String> colRet  = new TableColumn<>("Total retours");
-        TableColumn<FicheJournaliere,String> colNet  = new TableColumn<>("Total net");
+        TableColumn<LigneSortie, String> colClient = new TableColumn<>("Client / Livreur");
+        TableColumn<LigneSortie, String> colProduit = new TableColumn<>("Désignation Produit");
+        TableColumn<LigneSortie, String> colQteSort = new TableColumn<>("Qté sortie");
+        TableColumn<LigneSortie, String> colQteRet = new TableColumn<>("Qté retour");
+        TableColumn<LigneSortie, String> colQteNet = new TableColumn<>("Qté nette");
+        TableColumn<LigneSortie, String> colPrix = new TableColumn<>("Prix unitaire");
+        TableColumn<LigneSortie, String> colTotal = new TableColumn<>("Total HT");
+        TableColumn<LigneSortie, Void> colActions = new TableColumn<>("Actions");
 
-        colNum .setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getNumero()));
-        colDate.setCellValueFactory(d -> new SimpleStringProperty(FormatUtil.date(d.getValue().getDateFiche())));
-        colLiv .setCellValueFactory(d -> new SimpleStringProperty(
-            d.getValue().getLivreur() != null ? d.getValue().getLivreur().getNomComplet() : "—"));
-        colStat.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getStatut().name()));
-        colStat.setCellFactory(c -> new TableCell<>() {
-            @Override protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty); setGraphic(empty ? null : badge(item));
+        colClient.setCellValueFactory(d -> new SimpleStringProperty(
+            d.getValue().getClient() != null ? d.getValue().getClient().getNom() : "—"));
+        colClient.setPrefWidth(180);
+
+        colProduit.setCellValueFactory(d -> new SimpleStringProperty(
+            d.getValue().getProduit() != null ? d.getValue().getProduit().getLibelle() : "—"));
+        colProduit.setPrefWidth(200);
+
+        colQteSort.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getQuantiteSortie())));
+        colQteSort.setStyle("-fx-alignment: CENTER-RIGHT;");
+        colQteSort.setPrefWidth(90);
+
+        colQteRet.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getQuantiteRetournee())));
+        colQteRet.setStyle("-fx-alignment: CENTER-RIGHT;");
+        colQteRet.setPrefWidth(90);
+
+        colQteNet.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getQuantiteNette())));
+        colQteNet.setStyle("-fx-alignment: CENTER-RIGHT; -fx-font-weight: bold;");
+        colQteNet.setPrefWidth(90);
+
+        colPrix.setCellValueFactory(d -> new SimpleStringProperty(
+            d.getValue().getTarifApplicable() != null ? FormatUtil.montant(d.getValue().getTarifApplicable()) : "0"));
+        colPrix.setStyle("-fx-alignment: CENTER-RIGHT;");
+        colPrix.setPrefWidth(110);
+
+        colTotal.setCellValueFactory(d -> new SimpleStringProperty(
+            d.getValue().getMontantHt() != null ? FormatUtil.montant(d.getValue().getMontantHt()) : "0"));
+        colTotal.setStyle("-fx-alignment: CENTER-RIGHT; -fx-font-weight: bold; -fx-text-fill: #1F3A5F;");
+        colTotal.setPrefWidth(130);
+
+        colActions.setCellFactory(col -> new TableCell<>() {
+            private final Button btnModif = new Button("Modifier");
+            private final Button btnSuppr = new Button("Suppr.");
+            private final HBox box = new HBox(6, btnModif, btnSuppr);
+
+            {
+                btnModif.setStyle("-fx-font-size: 10px; -fx-padding: 3 8; -fx-background-color: #E8F0FB; -fx-text-fill: #2E5A88; -fx-cursor: hand;");
+                btnSuppr.setStyle("-fx-font-size: 10px; -fx-padding: 3 8; -fx-background-color: #FDECEA; -fx-text-fill: #C62828; -fx-cursor: hand;");
+                box.setAlignment(Pos.CENTER);
+
+                btnModif.setOnAction(e -> {
+                    LigneSortie l = getTableView().getItems().get(getIndex());
+                    ouvrirFormulaireSortie(l);
+                });
+                btnSuppr.setOnAction(e -> {
+                    LigneSortie l = getTableView().getItems().get(getIndex());
+                    supprimerLigne(l);
+                });
+            }
+
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                setGraphic(empty ? null : box);
             }
         });
-        colLig .setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getNbLignes())));
-        colSort.setCellValueFactory(d -> new SimpleStringProperty(FormatUtil.montant(d.getValue().getTotalSorties())));
-        colRet .setCellValueFactory(d -> new SimpleStringProperty(FormatUtil.montant(d.getValue().getTotalRetours())));
-        colNet .setCellValueFactory(d -> new SimpleStringProperty(FormatUtil.montant(d.getValue().getTotalNet())));
-        colNet.setStyle("-fx-font-weight: bold;");
+        colActions.setPrefWidth(140);
 
-        table.getColumns().addAll(colNum, colDate, colLiv, colStat, colLig, colSort, colRet, colNet);
+        table.getColumns().addAll(colClient, colProduit, colQteSort, colQteRet, colQteNet, colPrix, colTotal, colActions);
 
-        lblTotaux = footerCount("0 fiche(s)");
+        // Barre KPI en bas
+        lblTotalSorties = createKpiBadge("Total Sorties : 0");
+        lblTotalRetours = createKpiBadge("Total Retours : 0");
+        lblTotalNettes = createKpiBadge("Total Net : 0");
+        lblMontantTotal = createKpiBadge("Montant Total : 0 FCFA");
+        lblMontantTotal.setStyle(lblMontantTotal.getStyle() + " -fx-text-fill: #1F3A5F;");
+
+        HBox kpiBar = new HBox(12, lblTotalSorties, lblTotalRetours, lblTotalNettes, lblMontantTotal);
+        kpiBar.setPadding(new Insets(8, 0, 0, 0));
 
         VBox body = new VBox(10,
-            header("Fiches journalières — Sorties & Retours", btnNouv, btnClot, btnRefr),
-            table, lblTotaux);
+            header("Enregistrement des Sorties & Fiches Journalières"),
+            toolBar,
+            table,
+            kpiBar
+        );
         body.setFillWidth(true);
         VBox.setVgrow(table, Priority.ALWAYS);
         root.setCenter(body);
     }
 
+    private Label createKpiBadge(String text) {
+        Label lbl = new Label(text);
+        lbl.setStyle("-fx-font-size: 12px; -fx-font-weight: bold; -fx-background-color: white; "
+            + "-fx-border-color: #D6CFC4; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 6 12;");
+        return lbl;
+    }
+
     @Override
     public void refresh() {
-        runAsync(() -> ficheDAO.findByDate(LocalDate.now()), list -> {
-            data.setAll(list);
-            // Totaux
-            var totalNet = list.stream().map(FicheJournaliere::getTotalNet)
-                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
-            lblTotaux.setText(list.size() + " fiche(s) aujourd'hui  |  "
-                + "Total net : " + FormatUtil.montant(totalNet) + " FCFA");
+        LocalDate date = dpDate.getValue() != null ? dpDate.getValue() : LocalDate.now();
+        runAsync(() -> ficheDAO.findLignesByDate(date), lignes -> {
+            this.allLignes = lignes;
+            filtrer();
         });
     }
 
-    private void nouvelleFiche() {
-        // Choisir livreur
-        runAsync(() -> new UtilisateurDAO().findLivreurs(), livreurs -> {
-            if (livreurs.isEmpty()) {
-                mainWindow.showAlert("Info", "Aucun livreur disponible.", Alert.AlertType.INFORMATION); return;
-            }
-            ChoiceDialog<Utilisateur> dlg = new ChoiceDialog<>(livreurs.get(0), livreurs);
-            dlg.setTitle("Nouvelle fiche"); dlg.setHeaderText(null);
-            dlg.setContentText("Sélectionner le livreur :");
-            dlg.showAndWait().ifPresent(livreur -> runAsync(() -> {
-                FicheJournaliere f = new FicheJournaliere();
-                f.setDateFiche(LocalDate.now());
-                f.setLivreur(livreur);
-                f.setNumero(ficheDAO.genererNumero(LocalDate.now()));
-                f.setStatut(FicheJournaliere.Statut.EnCours);
-                f.setCreePar(session.getUserId());
-                String id = ficheDAO.save(f);
-                f.setId(id);
-                return ficheDAO.findById(id).orElse(f);
-            }, fiche -> {
-                refresh();
-                ouvrirSaisie(fiche);
-            }));
-        });
+    private void filtrer() {
+        String filter = txtRecherche.getText() != null ? txtRecherche.getText().trim().toLowerCase() : "";
+        List<LigneSortie> filtered = allLignes.stream().filter(l -> {
+            if (filter.isEmpty()) return true;
+            String cl = l.getClient() != null ? l.getClient().getNom().toLowerCase() : "";
+            String pr = l.getProduit() != null ? l.getProduit().getLibelle().toLowerCase() : "";
+            return cl.contains(filter) || pr.contains(filter);
+        }).toList();
+
+        data.setAll(filtered);
+
+        int totalSort = 0;
+        int totalRet = 0;
+        int totalNet = 0;
+        BigDecimal montantTot = BigDecimal.ZERO;
+
+        for (LigneSortie l : filtered) {
+            totalSort += l.getQuantiteSortie();
+            totalRet += l.getQuantiteRetournee();
+            totalNet += l.getQuantiteNette();
+            if (l.getMontantHt() != null) montantTot = montantTot.add(l.getMontantHt());
+        }
+
+        lblTotalSorties.setText("Total Sorties : " + totalSort + " pièces");
+        lblTotalRetours.setText("Total Retours : " + totalRet + " pièces");
+        lblTotalNettes.setText("Total Net : " + totalNet + " pièces");
+        lblMontantTotal.setText("Montant Total : " + FormatUtil.montant(montantTot) + " FCFA");
     }
 
-    private void ouvrirSaisie(FicheJournaliere f) {
-        if (f == null) return;
-        // Dialog de saisie des lignes
-        Dialog<Void> dlg = new Dialog<>();
-        dlg.setTitle("Saisie — " + f.getNumero());
-        dlg.setHeaderText("Livreur : " + (f.getLivreur() != null ? f.getLivreur().getNomComplet() : "—")
-            + "   Date : " + FormatUtil.date(f.getDateFiche()));
-        dlg.getDialogPane().setPrefSize(900, 620);
-        dlg.getDialogPane().setContent(buildSaisieContent(f));
-        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.CLOSE);
-        dlg.showAndWait();
-        refresh();
-    }
+    private void ouvrirFormulaireSortie(LigneSortie existante) {
+        Dialog<Boolean> dlg = new Dialog<>();
+        dlg.setTitle(existante == null ? "Enregistrer une sortie" : "Modifier la sortie");
+        dlg.setHeaderText(null);
+        dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-    private VBox buildSaisieContent(FicheJournaliere fiche) {
-        // Table des lignes existantes
-        TableView<LigneSortie> tblLignes = new TableView<>(
-            FXCollections.observableArrayList(fiche.getLignes()));
-        tblLignes.setPrefHeight(200);
+        List<Client> clients = clientDAO.findAll();
+        List<Produit> produits = produitDAO.findAll(false);
 
-        TableColumn<LigneSortie,String> c1 = new TableColumn<>("Client");
-        c1.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getClient()!=null?d.getValue().getClient().getNom():"—"));
-        TableColumn<LigneSortie,String> c2 = new TableColumn<>("Produit");
-        c2.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getProduit()!=null?d.getValue().getProduit().getLibelle():"—"));
-        TableColumn<LigneSortie,String> c3 = new TableColumn<>("Qté sortie");
-        c3.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getQuantiteSortie())));
-        TableColumn<LigneSortie,String> c4 = new TableColumn<>("Qté retournée");
-        c4.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getQuantiteRetournee())));
-        TableColumn<LigneSortie,String> c5 = new TableColumn<>("Tarif");
-        c5.setCellValueFactory(d -> new SimpleStringProperty(FormatUtil.montant(d.getValue().getTarifApplicable())));
-        TableColumn<LigneSortie,String> c6 = new TableColumn<>("Montant HT");
-        c6.setCellValueFactory(d -> new SimpleStringProperty(FormatUtil.montant(d.getValue().getMontantHt())));
-        tblLignes.getColumns().addAll(c1,c2,c3,c4,c5,c6);
+        ComboBox<Client> cboClient = new ComboBox<>(FXCollections.observableArrayList(clients));
+        cboClient.setPrefWidth(260);
+        cboClient.setPromptText("Sélectionner le client / livreur...");
 
-        // Formulaire ajout ligne
-        List<Client>  clients  = new ClientDAO().findAll();
-        List<Produit> produits = new ProduitDAO().findAll(false);
-        ComboBox<Client>  cboClient  = new ComboBox<>(FXCollections.observableArrayList(clients));
         ComboBox<Produit> cboProduit = new ComboBox<>(FXCollections.observableArrayList(produits));
-        Spinner<Integer> spnSort = new Spinner<>(0, 9999, 0);
-        Spinner<Integer> spnRet  = new Spinner<>(0, 9999, 0);
-        ComboBox<String> cboMotif = new ComboBox<>(FXCollections.observableArrayList(
-            "", "Produit abîmé", "Invendu", "Erreur quantité", "Autre"));
+        cboProduit.setPrefWidth(260);
+        cboProduit.setPromptText("Sélectionner le produit...");
 
-        Label lblTarif = new Label("Tarif : —");
-        TarifService tarifSvc = new TarifService();
+        TextField txtPrix = new TextField("0");
+        txtPrix.setPrefWidth(120);
 
-        // Recalcul tarif au changement
-        javafx.beans.value.ChangeListener<Object> recalc = (o,ov,nv) -> {
-            Client cl  = cboClient.getValue();
-            Produit pr = cboProduit.getValue();
-            if (cl != null && pr != null && pr.getId() != null) {
-                try {
-                    var tr = tarifSvc.resoudre(pr.getId(), cl, spnSort.getValue(), fiche.getDateFiche());
-                    lblTarif.setText("Tarif : " + FormatUtil.montant(tr.prix())
-                        + " FCFA  (" + tr.typeTarif() + ")");
-                } catch (Exception e) { lblTarif.setText("Tarif : —"); }
+        Spinner<Integer> spnSortie = new Spinner<>(0, 99999, 0);
+        spnSortie.setEditable(true);
+        spnSortie.setPrefWidth(120);
+
+        Spinner<Integer> spnRetour = new Spinner<>(0, 99999, 0);
+        spnRetour.setEditable(true);
+        spnRetour.setPrefWidth(120);
+
+        TextField txtMotif = new TextField();
+        txtMotif.setPromptText("Motif si retour (ex: invendu, abîmé)...");
+        txtMotif.setPrefWidth(260);
+
+        Label lblCalcul = new Label("Total calculé : 0 FCFA");
+        lblCalcul.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1A73E8;");
+
+        // Boutons rapides pour incrémenter les sorties
+        HBox btnRapides = new HBox(6);
+        for (int q : new int[]{10, 25, 50, 100}) {
+            Button b = new Button("+" + q);
+            b.setStyle("-fx-font-size: 11px; -fx-padding: 3 8; -fx-background-color: #EDE8DE; -fx-cursor: hand;");
+            b.setOnAction(e -> spnSortie.getValueFactory().setValue(spnSortie.getValue() + q));
+            btnRapides.getChildren().add(b);
+        }
+
+        // Écouteur pour recalcul immédiat
+        Runnable recalculer = () -> {
+            Produit p = cboProduit.getValue();
+            if (p != null && (txtPrix.getText() == null || txtPrix.getText().isBlank() || txtPrix.getText().equals("0"))) {
+                if (p.getPrixUnitaire() != null) {
+                    txtPrix.setText(p.getPrixUnitaire().toPlainString());
+                }
+            }
+            try {
+                BigDecimal prix = new BigDecimal(txtPrix.getText().trim().replace(" ", "").replace(",", "."));
+                int qteNette = spnSortie.getValue() - spnRetour.getValue();
+                if (qteNette < 0) qteNette = 0;
+                BigDecimal tot = prix.multiply(BigDecimal.valueOf(qteNette));
+                lblCalcul.setText("Total calculé : " + FormatUtil.montant(tot) + " FCFA  (" + qteNette + " pièces nettes)");
+            } catch (Exception ignored) {
+                lblCalcul.setText("Total calculé : —");
             }
         };
-        cboClient.valueProperty().addListener(recalc);
-        cboProduit.valueProperty().addListener(recalc);
-        spnSort.valueProperty().addListener(recalc);
 
-        Button btnAdd = new Button("+ Ajouter la ligne");
-        btnAdd.setStyle("-fx-background-color:#1A73E8; -fx-text-fill:white; -fx-cursor:hand;");
-        btnAdd.setOnAction(e -> {
-            Client cl  = cboClient.getValue();
-            Produit pr = cboProduit.getValue();
-            if (cl == null || pr == null) return;
-            int qSort = spnSort.getValue(), qRet = spnRet.getValue();
-            if (qRet > qSort) { mainWindow.showAlert("Validation","Qté retournée > sortie.",Alert.AlertType.WARNING); return; }
-            if (qRet > 0 && (cboMotif.getValue() == null || cboMotif.getValue().isBlank())) {
-                mainWindow.showAlert("Validation","Motif retour obligatoire.",Alert.AlertType.WARNING); return; }
-            if (cl.isBloque()) { mainWindow.showAlert("Blocage","Client bloqué — sortie refusée.",Alert.AlertType.ERROR); return; }
-
-            TarifService.TarifResolu tr;
-            try { tr = tarifSvc.resoudre(pr.getId(), cl, qSort, fiche.getDateFiche()); }
-            catch (Exception ex) { tr = new TarifService.TarifResolu(java.math.BigDecimal.ZERO,"Standard",java.math.BigDecimal.ZERO,java.math.BigDecimal.ZERO,null); }
-
-            LigneSortie l = new LigneSortie();
-            l.setFicheId(fiche.getId());
-            l.setClient(cl); l.setProduit(pr);
-            l.setQuantiteSortie(qSort); l.setQuantiteRetournee(qRet);
-            l.setTarifApplicable(tr.prix()); l.setTypeTarif(tr.typeTarif());
-            l.setRemisePct(tr.remisePct());
-            if (qRet > 0) l.setMotifRetour(cboMotif.getValue());
-
-            ficheDAO.saveLigne(l);
-            fiche.getLignes().add(l);
-            fiche.recalculerTotaux();
-            ficheDAO.updateTotaux(fiche.getId(), fiche.getTotalSorties(), fiche.getTotalRetours(), fiche.getTotalNet());
-            tblLignes.getItems().add(l);
-            spnSort.getValueFactory().setValue(0); spnRet.getValueFactory().setValue(0);
+        cboProduit.valueProperty().addListener((obs, ov, nv) -> {
+            if (nv != null && nv.getPrixUnitaire() != null) {
+                txtPrix.setText(nv.getPrixUnitaire().toPlainString());
+            }
+            recalculer.run();
         });
+        txtPrix.textProperty().addListener((obs, ov, nv) -> recalculer.run());
+        spnSortie.valueProperty().addListener((obs, ov, nv) -> recalculer.run());
+        spnRetour.valueProperty().addListener((obs, ov, nv) -> recalculer.run());
 
-        GridPane addForm = new GridPane();
-        addForm.setHgap(8); addForm.setVgap(6); addForm.setPadding(new Insets(8,0,8,0));
-        addForm.addRow(0, new Label("Client"), cboClient, new Label("Produit"), cboProduit);
-        addForm.addRow(1, new Label("Qté sortie"), spnSort, new Label("Qté retournée"), spnRet);
-        addForm.addRow(2, lblTarif, new Label(), new Label("Motif retour"), cboMotif);
-        addForm.addRow(3, btnAdd);
-
-        VBox box = new VBox(10, new Label("Lignes de sortie :"), tblLignes,
-            new Separator(), new Label("Ajouter une ligne :"), addForm);
-        box.setPadding(new Insets(8));
-        return box;
-    }
-
-    private void cloturerSelection() {
-        FicheJournaliere sel = table.getSelectionModel().getSelectedItem();
-        if (sel == null) { mainWindow.showAlert("Info","Sélectionnez une fiche.",Alert.AlertType.INFORMATION); return; }
-        if (sel.getStatut() == FicheJournaliere.Statut.Clôturée) {
-            mainWindow.showAlert("Information", "Cette fiche est déjà clôturée et facturée.", Alert.AlertType.INFORMATION);
-            return;
+        if (existante != null) {
+            if (existante.getClient() != null) {
+                clients.stream().filter(c -> c.getId().equals(existante.getClient().getId())).findFirst().ifPresent(cboClient::setValue);
+            }
+            if (existante.getProduit() != null) {
+                produits.stream().filter(p -> p.getId().equals(existante.getProduit().getId())).findFirst().ifPresent(cboProduit::setValue);
+            }
+            if (existante.getTarifApplicable() != null) txtPrix.setText(existante.getTarifApplicable().toPlainString());
+            spnSortie.getValueFactory().setValue(existante.getQuantiteSortie());
+            spnRetour.getValueFactory().setValue(existante.getQuantiteRetournee());
+            if (existante.getMotifRetour() != null) txtMotif.setText(existante.getMotifRetour());
+            recalculer.run();
         }
-        Alert conf = new Alert(Alert.AlertType.CONFIRMATION,
-            "Clôturer " + sel.getNumero() + " et générer les factures ?");
-        conf.setTitle("Confirmation"); conf.setHeaderText(null);
-        conf.showAndWait().filter(r -> r == ButtonType.OK).ifPresent(r -> {
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new Insets(16));
+
+        grid.addRow(0, new Label("Client / Livreur : *"), cboClient);
+        grid.addRow(1, new Label("Produit : *"), cboProduit);
+        grid.addRow(2, new Label("Prix unitaire (FCFA) :"), txtPrix);
+        grid.addRow(3, new Label("Quantité sortie :"), new VBox(4, spnSortie, btnRapides));
+        grid.addRow(4, new Label("Quantité retournée :"), spnRetour);
+        grid.addRow(5, new Label("Motif retour :"), txtMotif);
+        grid.addRow(6, new Label(""), lblCalcul);
+
+        dlg.getDialogPane().setContent(grid);
+        dlg.setResultConverter(btn -> btn == ButtonType.OK);
+
+        dlg.showAndWait().ifPresent(ok -> {
+            if (!ok) return;
+            Client cl = cboClient.getValue();
+            Produit pr = cboProduit.getValue();
+            if (cl == null || pr == null) {
+                mainWindow.showAlert("Validation", "Veuillez sélectionner un client et un produit.", Alert.AlertType.WARNING);
+                return;
+            }
+            int qSort = spnSortie.getValue();
+            int qRet = spnRetour.getValue();
+            if (qRet > qSort) {
+                mainWindow.showAlert("Validation", "La quantité retournée ne peut pas dépasser la quantité sortie.", Alert.AlertType.WARNING);
+                return;
+            }
+
+            BigDecimal prix;
+            try {
+                prix = new BigDecimal(txtPrix.getText().trim().replace(" ", "").replace(",", "."));
+            } catch (Exception ex) {
+                prix = pr.getPrixUnitaire() != null ? pr.getPrixUnitaire() : BigDecimal.ZERO;
+            }
+
+            LocalDate dateFiche = dpDate.getValue() != null ? dpDate.getValue() : LocalDate.now();
+
             runAsync(() -> {
-                FicheJournaliere fiche = ficheDAO.findById(sel.getId())
-                    .orElseThrow(() -> new IllegalStateException("Fiche introuvable."));
-                factService.genererDepuisFiche(fiche);
-                ficheDAO.updateStatut(fiche.getId(), FicheJournaliere.Statut.Clôturée);
+                FicheJournaliere fj = ficheDAO.getOrCreateFicheJour(dateFiche, null, session.getUserId());
+                if (existante == null) {
+                    LigneSortie l = new LigneSortie();
+                    l.setFicheId(fj.getId());
+                    l.setClient(cl);
+                    l.setProduit(pr);
+                    l.setQuantiteSortie(qSort);
+                    l.setQuantiteRetournee(qRet);
+                    l.setTarifApplicable(prix);
+                    l.setTypeTarif("Standard");
+                    l.setMotifRetour(txtMotif.getText().trim());
+                    l.setRemisePct(BigDecimal.ZERO);
+                    ficheDAO.saveLigne(l);
+                } else {
+                    existante.setClient(cl);
+                    existante.setProduit(pr);
+                    existante.setQuantiteSortie(qSort);
+                    existante.setQuantiteRetournee(qRet);
+                    existante.setTarifApplicable(prix);
+                    existante.setMotifRetour(txtMotif.getText().trim());
+                    ficheDAO.updateLigne(existante);
+                }
+                ficheDAO.recalculerTotauxFiche(fj.getId());
                 return true;
-            }, ok -> {
+            }, success -> {
                 refresh();
-                mainWindow.showAlert("Succès","Fiche clôturée et factures générées.",Alert.AlertType.INFORMATION);
             });
         });
+    }
+
+    private void supprimerLigne(LigneSortie ligne) {
+        Alert conf = new Alert(Alert.AlertType.CONFIRMATION,
+            "Voulez-vous supprimer cette sortie pour " + (ligne.getClient() != null ? ligne.getClient().getNom() : "") + " ?");
+        conf.setTitle("Confirmation");
+        conf.setHeaderText(null);
+        conf.showAndWait().filter(r -> r == ButtonType.OK).ifPresent(r -> {
+            runAsync(() -> {
+                ficheDAO.deleteLigne(ligne.getId());
+                if (ligne.getFicheId() != null) {
+                    ficheDAO.recalculerTotauxFiche(ligne.getFicheId());
+                }
+                return true;
+            }, ok -> refresh());
+        });
+    }
+
+    private void exporterFichePDF() {
+        if (allLignes.isEmpty()) {
+            mainWindow.showAlert("Information", "Aucune sortie enregistrée pour cette date.", Alert.AlertType.INFORMATION);
+            return;
+        }
+        LocalDate date = dpDate.getValue() != null ? dpDate.getValue() : LocalDate.now();
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Exporter la Fiche de Sortie PDF");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Document PDF (*.pdf)", "*.pdf"));
+        fc.setInitialFileName("FICHE_SORTIE_" + date + ".pdf");
+        File f = fc.showSaveDialog(mainWindow.getStage());
+        if (f == null) return;
+
+        runAsync(() -> {
+            PdfService.exporterFicheSortie(date, allLignes, f.getAbsolutePath());
+            return true;
+        }, ok -> mainWindow.showAlert("Succès", "Fiche de sortie PDF exportée avec succès :\n" + f.getName(), Alert.AlertType.INFORMATION));
+    }
+
+    private void exporterFicheExcel() {
+        if (allLignes.isEmpty()) {
+            mainWindow.showAlert("Information", "Aucune sortie enregistrée pour cette date.", Alert.AlertType.INFORMATION);
+            return;
+        }
+        LocalDate date = dpDate.getValue() != null ? dpDate.getValue() : LocalDate.now();
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Exporter la Fiche de Sortie Excel");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Feuille Excel / CSV (*.csv)", "*.csv"));
+        fc.setInitialFileName("SORTIE_" + date + ".csv");
+        File f = fc.showSaveDialog(mainWindow.getStage());
+        if (f == null) return;
+
+        runAsync(() -> {
+            ExcelExportService.exporterFicheSortieExcel(date, allLignes, f);
+            return true;
+        }, ok -> mainWindow.showAlert("Succès", "Fiche Excel exportée avec succès :\n" + f.getName(), Alert.AlertType.INFORMATION));
     }
 }

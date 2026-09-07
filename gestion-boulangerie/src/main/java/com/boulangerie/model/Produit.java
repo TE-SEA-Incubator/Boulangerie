@@ -1,5 +1,6 @@
 package com.boulangerie.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ public class Produit {
     private Statut statut;
     private int seuilAlerte;
     private String description;
+    private BigDecimal prixUnitaire = BigDecimal.ZERO;
     private LocalDateTime dateCreation;
     private List<Tarif> tarifs = new ArrayList<>();
 
@@ -36,6 +38,8 @@ public class Produit {
     public void setSeuilAlerte(int seuilAlerte) { this.seuilAlerte = seuilAlerte; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public BigDecimal getPrixUnitaire() { return prixUnitaire; }
+    public void setPrixUnitaire(BigDecimal prixUnitaire) { this.prixUnitaire = prixUnitaire != null ? prixUnitaire : BigDecimal.ZERO; }
     public LocalDateTime getDateCreation() { return dateCreation; }
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
     public List<Tarif> getTarifs() { return tarifs; }

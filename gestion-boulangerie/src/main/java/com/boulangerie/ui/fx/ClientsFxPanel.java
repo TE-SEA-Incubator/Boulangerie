@@ -60,12 +60,11 @@ public class ClientsFxPanel extends FxPanelBase {
 
         // Colonnes
         TableColumn<Client,String> colCode  = col("Code",          c -> c.getCode());
-        TableColumn<Client,String> colNom   = col("Nom",           c -> c.getNom());
-        TableColumn<Client,String> colVille = col("Ville",         c -> c.getVille() != null ? c.getVille() : "—");
+        TableColumn<Client,String> colNom   = col("Nom / Raison",  c -> c.getNom());
+        TableColumn<Client,String> colAdresse = col("Adresse",     c -> c.getAdresse() != null && !c.getAdresse().isBlank() ? c.getAdresse() : "—");
         TableColumn<Client,String> colTel   = col("Téléphone",     c -> c.getTelephone() != null ? c.getTelephone() : "—");
         TableColumn<Client,String> colCat   = col("Catégorie",     c -> c.getCategorie() != null ? c.getCategorie().getNom() : "—");
         TableColumn<Client,String> colType  = col("Type",          c -> c.getTypeClient().name());
-        TableColumn<Client,String> colLiv   = col("Livreur",       c -> c.getLivreurRattache() != null ? c.getLivreurRattache().getNomComplet() : "—");
         TableColumn<Client,String> colSolde = col("Solde (FCFA)",  c -> FormatUtil.montant(c.getSoldeActuel()));
         TableColumn<Client,String> colStat  = col("Statut",        c -> c.getStatut().name());
 
@@ -83,20 +82,20 @@ public class ClientsFxPanel extends FxPanelBase {
                 setText(item);
                 try {
                     double v = Double.parseDouble(item.replace(" ","").replace(",","."));
-                    setStyle(v > 0 ? "-fx-text-fill:#D93025; -fx-alignment:CENTER-RIGHT;"
-                                   : "-fx-text-fill:#0F9D58; -fx-alignment:CENTER-RIGHT;");
+                    setStyle(v > 0 ? "-fx-text-fill:#D93025; -fx-alignment:CENTER-RIGHT; -fx-font-weight:bold;"
+                                   : "-fx-text-fill:#0F9D58; -fx-alignment:CENTER-RIGHT; -fx-font-weight:bold;");
                 } catch (Exception ex) { setStyle(""); }
             }
         });
 
-        table.getColumns().addAll(colCode, colNom, colVille, colTel,
-            colCat, colType, colLiv, colSolde, colStat);
+        table.getColumns().addAll(colCode, colNom, colAdresse, colTel,
+            colCat, colType, colSolde, colStat);
 
-        lblCount = footerCount("0 clients");
+        lblCount = footerCount("0 partenaires (clients / livreurs)");
 
         VBox body = new VBox(10);
         body.getChildren().addAll(
-            header("Gestion Clients",
+            header("Clients & Livreurs",
                 btnNouv, btnBloquer, btnDebloq,
                 new Separator(javafx.geometry.Orientation.VERTICAL),
                 searchField, cboStatut, btnPDF),
@@ -124,20 +123,25 @@ public class ClientsFxPanel extends FxPanelBase {
     }
 
     private void ouvrirFormulaire(Client cl) {
+        final boolean isNouveau = (cl == null);
         Dialog<Client> dlg = new Dialog<>();
-        dlg.setTitle(cl == null ? "Nouveau client" : "Fiche — " + cl.getNom());
-        dlg.setHeaderText(null);
+        dlg.setTitle(isNouveau ? "Nouveau Partenaire (Client / Livreur)" : "Fiche Partenaire — " + cl.getNom());
+        dlg.setHeaderText(isNouveau ? "Création d'un client ou livreur (code auto-généré)" : "Modification du partenaire");
         dlg.getDialogPane().setPrefWidth(520);
 
         GridPane form = new GridPane();
         form.setHgap(10); form.setVgap(8); form.setPadding(new Insets(16));
 
-        TextField txtCode  = new TextField(cl != null ? cl.getCode()  : "");
-        TextField txtNom   = new TextField(cl != null ? cl.getNom()   : "");
-        TextField txtVille = new TextField(cl != null && cl.getVille() != null ? cl.getVille() : "");
-        TextField txtTel   = new TextField(cl != null && cl.getTelephone() != null ? cl.getTelephone() : "");
-        TextField txtDelai = new TextField(cl != null ? String.valueOf(cl.getDelaiPaiement()) : "30");
-        TextField txtPlaf  = new TextField(cl != null ? cl.getPlafondCredit().toPlainString() : "0");
+        TextField txtCode = new TextField();
+        txtCode.setEditable(false);
+        txtCode.setStyle("-fx-background-color: #F1F3F4; -fx-text-fill: #3C4043; -fx-font-weight: bold;");
+        txtCode.setText(isNouveau ? clientDAO.genererCode() : cl.getCode());
+
+        TextField txtNom     = new TextField(cl != null ? cl.getNom() : "");
+        TextField txtAdresse = new TextField(cl != null && cl.getAdresse() != null ? cl.getAdresse() : "");
+        TextField txtQuartier= new TextField(cl != null && cl.getQuartier() != null ? cl.getQuartier() : "");
+        TextField txtTel     = new TextField(cl != null && cl.getTelephone() != null ? cl.getTelephone() : "");
+        TextField txtEmail   = new TextField(cl != null && cl.getEmail() != null ? cl.getEmail() : "");
 
         List<CategorieClient> cats = clientDAO.findAllCategories();
         ComboBox<CategorieClient> cboCat = new ComboBox<>(FXCollections.observableArrayList(cats));
@@ -150,14 +154,14 @@ public class ClientsFxPanel extends FxPanelBase {
             FXCollections.observableArrayList("Nominatif", "Anonyme"));
         cboType.setValue(cl != null ? cl.getTypeClient().name() : "Nominatif");
 
-        form.addRow(0, new Label("Code *"),    txtCode);
-        form.addRow(1, new Label("Nom *"),     txtNom);
-        form.addRow(2, new Label("Ville"),     txtVille);
-        form.addRow(3, new Label("Téléphone"), txtTel);
-        form.addRow(4, new Label("Catégorie"), cboCat);
-        form.addRow(5, new Label("Type"),      cboType);
-        form.addRow(6, new Label("Délai paiement (j)"), txtDelai);
-        form.addRow(7, new Label("Plafond crédit (FCFA)"), txtPlaf);
+        form.addRow(0, new Label("Code *"),         txtCode);
+        form.addRow(1, new Label("Nom / Raison *"), txtNom);
+        form.addRow(2, new Label("Adresse *"),      txtAdresse);
+        form.addRow(3, new Label("Quartier"),       txtQuartier);
+        form.addRow(4, new Label("Téléphone"),      txtTel);
+        form.addRow(5, new Label("Email"),          txtEmail);
+        form.addRow(6, new Label("Catégorie"),      cboCat);
+        form.addRow(7, new Label("Type"),           cboType);
 
         dlg.getDialogPane().setContent(form);
         dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -167,13 +171,13 @@ public class ClientsFxPanel extends FxPanelBase {
             Client nc = cl != null ? cl : new Client();
             nc.setCode(txtCode.getText().trim());
             nc.setNom(txtNom.getText().trim());
-            nc.setVille(txtVille.getText().trim());
+            nc.setAdresse(txtAdresse.getText().trim());
+            nc.setQuartier(txtQuartier.getText().trim());
             nc.setTelephone(txtTel.getText().trim());
+            nc.setEmail(txtEmail.getText().trim());
             nc.setCategorie(cboCat.getValue());
             nc.setTypeClient(Client.TypeClient.valueOf(cboType.getValue()));
             nc.setEstAnonyme(Client.TypeClient.Anonyme.equals(nc.getTypeClient()));
-            try { nc.setDelaiPaiement(Integer.parseInt(txtDelai.getText().trim())); } catch (Exception ignored) {}
-            try { nc.setPlafondCredit(new BigDecimal(txtPlaf.getText().trim().replace(",","."))); } catch (Exception ignored) {}
             return nc;
         });
 
@@ -186,7 +190,7 @@ public class ClientsFxPanel extends FxPanelBase {
                 else clientDAO.update(nc);
                 auditDAO.log(new JournalAudit("Client", nc.getId(),
                     nc.getId()==null ? JournalAudit.CREATE : JournalAudit.UPDATE,
-                    session.getUserId(), session.getLogin(), "Client: " + nc.getCode()));
+                    session.getUserId(), session.getLogin(), "Partenaire: " + nc.getCode()));
                 return true;
             }, ok -> refresh());
         });
