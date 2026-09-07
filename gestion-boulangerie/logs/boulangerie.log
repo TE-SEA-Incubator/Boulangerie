@@ -1,4 +1,0 @@
-2026-09-07 09:37:49 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
-2026-09-07 09:37:49 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — initialisation ignorée.
-2026-09-07 09:37:51 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
-2026-09-07 09:38:12 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
