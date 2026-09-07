@@ -35,8 +35,7 @@ public class ClientDialog extends JDialog {
     private final Client client;
 
     // Champs fiche
-    private JTextField txtCode, txtNom, txtQuartier, txtTelephone, txtEmail;
-    private JTextField txtDelai, txtPlafond;
+    private JTextField txtCode, txtNom, txtAdresse, txtQuartier, txtTelephone, txtEmail;
     private JComboBox<CategorieClient> cboCategorie;
     private JComboBox<String>          cboType, cboStatut;
     private JComboBox<Utilisateur>     cboLivreur;
@@ -105,19 +104,20 @@ public class ClientDialog extends JDialog {
 
         // Colonne gauche
         txtCode      = addLabelField(p, gc, "Identifiant *",        0, 0);
-        txtNom       = addLabelField(p, gc, "Nom du client *",       1, 0);
-        txtQuartier  = addLabelField(p, gc, "Quartier / Ville",      2, 0);
-        txtTelephone = addLabelField(p, gc, "Téléphone",             3, 0);
-        txtEmail     = addLabelField(p, gc, "Email",                 4, 0);
+        txtNom       = addLabelField(p, gc, "Nom du partenaire *",   1, 0);
+        txtAdresse   = addLabelField(p, gc, "Adresse *",            2, 0);
+        txtQuartier  = addLabelField(p, gc, "Quartier",             3, 0);
+        txtTelephone = addLabelField(p, gc, "Téléphone",             4, 0);
+        txtEmail     = addLabelField(p, gc, "Email",                 5, 0);
 
-        addLabel(p, gc, "Catégorie *", 5, 0);
-        gc.gridx = 1; gc.gridy = 5; gc.weightx = 1;
+        addLabel(p, gc, "Catégorie *", 6, 0);
+        gc.gridx = 1; gc.gridy = 6; gc.weightx = 1;
         cboCategorie = new JComboBox<>();
         clientDAO.findAllCategories().forEach(cboCategorie::addItem);
         p.add(cboCategorie, gc); gc.weightx = 0;
 
-        addLabel(p, gc, "Livreur rattaché", 6, 0);
-        gc.gridx = 1; gc.gridy = 6; gc.weightx = 1;
+        addLabel(p, gc, "Livreur rattaché", 7, 0);
+        gc.gridx = 1; gc.gridy = 7; gc.weightx = 1;
         cboLivreur = new JComboBox<>();
         Utilisateur vide = new Utilisateur(); vide.setNomComplet("— Aucun —");
         cboLivreur.addItem(vide);
@@ -130,29 +130,21 @@ public class ClientDialog extends JDialog {
         cboType = new JComboBox<>(new String[]{"Nominatif", "Anonyme"});
         p.add(cboType, gc); gc.weightx = 0;
 
-        addLabel(p, gc, "Délai paiement (jours)", 1, 2);
-        gc.gridx = 3; gc.gridy = 1; gc.weightx = 1;
-        txtDelai = new JTextField("30"); p.add(txtDelai, gc); gc.weightx = 0;
-
-        addLabel(p, gc, "Plafond de crédit (FCFA)", 2, 2);
-        gc.gridx = 3; gc.gridy = 2; gc.weightx = 1;
-        txtPlafond = new JTextField("0"); p.add(txtPlafond, gc); gc.weightx = 0;
-
-        addLabel(p, gc, "Solde précédent (FCFA)", 3, 2);
-        gc.gridx = 3; gc.gridy = 3;
+        addLabel(p, gc, "Solde précédent (FCFA)", 1, 2);
+        gc.gridx = 3; gc.gridy = 1;
         lblSoldePrecedent = new JLabel("0,00");
         lblSoldePrecedent.setFont(UIConstants.FONT_NORMAL);
         p.add(lblSoldePrecedent, gc);
 
-        addLabel(p, gc, "Solde actuel (FCFA)", 4, 2);
-        gc.gridx = 3; gc.gridy = 4;
+        addLabel(p, gc, "Solde actuel (FCFA)", 2, 2);
+        gc.gridx = 3; gc.gridy = 2;
         lblSoldeActuel = new JLabel("0,00");
         lblSoldeActuel.setFont(UIConstants.FONT_BOLD);
         lblSoldeActuel.setForeground(UIConstants.ROUGE_DANGER);
         p.add(lblSoldeActuel, gc);
 
-        addLabel(p, gc, "Statut", 5, 2);
-        gc.gridx = 3; gc.gridy = 5; gc.weightx = 1;
+        addLabel(p, gc, "Statut", 3, 2);
+        gc.gridx = 3; gc.gridy = 3; gc.weightx = 1;
         cboStatut = new JComboBox<>(new String[]{"Actif", "Bloqué", "Inactif"});
         p.add(cboStatut, gc); gc.weightx = 0;
 
@@ -279,11 +271,8 @@ public class ClientDialog extends JDialog {
         txtNom.setText(client.getNom()   != null ? client.getNom()   : "");
         txtTelephone.setText(client.getTelephone() != null ? client.getTelephone() : "");
         txtEmail.setText(client.getEmail()         != null ? client.getEmail()     : "");
-        String qv = (client.getQuartier() != null ? client.getQuartier() : "")
-                  + (client.getVille() != null && !client.getVille().isBlank() ? " " + client.getVille() : "");
-        txtQuartier.setText(qv.trim());
-        txtDelai.setText(String.valueOf(client.getDelaiPaiement()));
-        txtPlafond.setText(client.getPlafondCredit().toPlainString());
+        txtAdresse.setText(client.getAdresse()     != null ? client.getAdresse()   : "");
+        txtQuartier.setText(client.getQuartier()   != null ? client.getQuartier()  : "");
         lblSoldePrecedent.setText(FormatUtil.montant(client.getSoldePrecedent()) + " FCFA");
         lblSoldeActuel.setText(FormatUtil.montant(client.getSoldeActuel()) + " FCFA");
         lblSoldeActuel.setForeground(
@@ -376,12 +365,10 @@ public class ClientDialog extends JDialog {
         try {
             client.setCode(txtCode.getText().trim());
             client.setNom(txtNom.getText().trim());
-            String qv = txtQuartier.getText().trim();
-            client.setQuartier(qv);
+            client.setAdresse(txtAdresse.getText().trim());
+            client.setQuartier(txtQuartier.getText().trim());
             client.setTelephone(txtTelephone.getText().trim());
             client.setEmail(txtEmail.getText().trim());
-            client.setDelaiPaiement(Integer.parseInt(txtDelai.getText().trim()));
-            client.setPlafondCredit(new BigDecimal(txtPlafond.getText().trim().replace(",", ".")));
             client.setTypeClient(Client.TypeClient.valueOf((String) cboType.getSelectedItem()));
             client.setEstAnonyme(Client.TypeClient.Anonyme.equals(client.getTypeClient()));
 

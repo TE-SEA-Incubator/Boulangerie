@@ -128,4 +128,80 @@ public class CaisseService {
         log.info("Clôture {} validée, taux={}%", date, cl.getTauxRecouvrement());
         return cl;
     }
+
+    /**
+     * Charge les données de la feuille de caisse / facturation journalière
+     * consolidant les sorties, montants attendus, soldes précédents et versements.
+     */
+    public java.util.List<FicheCaisseLigne> chargerFicheCaisseJournaliere(LocalDate date) {
+        FicheJournaliereDAO ficheDAO = new FicheJournaliereDAO();
+        java.util.List<LigneSortie> sorties = ficheDAO.findLignesByDate(date);
+        java.util.List<Versement> versements = versementDAO.findByDate(date);
+        java.util.List<Client> clients = clientDAO.findAll();
+
+        java.util.Map<String, FicheCaisseLigne> map = new java.util.LinkedHashMap<>();
+
+        // 1. Agréger les sorties par client
+        for (LigneSortie ls : sorties) {
+            if (ls.getClient() == null) continue;
+            String clId = ls.getClient().getId();
+            FicheCaisseLigne ligne = map.computeIfAbsent(clId, id -> new FicheCaisseLigne(ls.getClient()));
+            ligne.ajouterSortie(ls);
+        }
+
+        // 2. Associer les versements effectués
+        for (Versement v : versements) {
+            if (v.getClient() == null) continue;
+            String clId = v.getClient().getId();
+            FicheCaisseLigne ligne = map.get(clId);
+            if (ligne == null) {
+                Client cl = clients.stream().filter(c -> c.getId().equals(clId)).findFirst().orElse(v.getClient());
+                ligne = new FicheCaisseLigne(cl);
+                map.put(clId, ligne);
+            }
+            ligne.setVersement(v);
+        }
+
+        // 3. Pour les clients ayant un solde débiteur non nul même sans sorties ce jour
+        for (Client cl : clients) {
+            if (cl.getSoldeActuel() != null && cl.getSoldeActuel().compareTo(BigDecimal.ZERO) > 0) {
+                map.computeIfAbsent(cl.getId(), id -> new FicheCaisseLigne(cl));
+            }
+        }
+
+        return new java.util.ArrayList<>(map.values());
+    }
+
+    /**
+     * Encaisse une ligne de caisse avec mise à jour immédiate du solde client et émission du reçu.
+     */
+    public Versement encaisserLigneCaisse(FicheCaisseLigne ligne, BigDecimal montantRecu, String modePaiement, String motifEcart) {
+        if (!session.hasPermission("CAISSE_WRITE")) throw new SecurityException("Permission refusée : CAISSE_WRITE");
+        if (ligne == null || ligne.getClient() == null) throw new IllegalArgumentException("Client requis pour l'encaissement.");
+        if (montantRecu == null || montantRecu.signum() < 0) throw new IllegalArgumentException("Le montant reçu doit être positif ou nul.");
+
+        Versement v = new Versement();
+        v.setNumero(versementDAO.genererNumero());
+        v.setDateVersement(LocalDate.now());
+        v.setClient(ligne.getClient());
+        v.setCaissier(session.getUtilisateur());
+        v.setModePaiement(modePaiement != null && !modePaiement.isBlank() ? modePaiement : "Espèces");
+        v.setMontantAttendu(ligne.getTotalSolde());
+        v.setMontantRemis(montantRecu);
+        v.setMontantEnregistre(montantRecu);
+
+        BigDecimal ecart = montantRecu.subtract(ligne.getTotalSolde());
+        v.setEcart(ecart);
+        if (motifEcart != null && !motifEcart.isBlank()) {
+            v.setMotifEcart(motifEcart);
+        } else if (ecart.compareTo(BigDecimal.ZERO) < 0) {
+            v.setMotifEcart("Paiement partiel — Reste à recouvrer : " + ecart.abs() + " FCFA");
+        } else {
+            v.setMotifEcart("");
+        }
+
+        enregistrerVersement(v);
+        ligne.setVersement(v);
+        return v;
+    }
 }

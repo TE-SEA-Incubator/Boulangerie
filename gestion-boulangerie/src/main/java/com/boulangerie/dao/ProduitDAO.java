@@ -23,7 +23,7 @@ public class ProduitDAO {
         List<Produit> list = new ArrayList<>();
         String sql = """
             SELECT p.id, p.code, p.libelle, p.unite, p.statut, p.seuil_alerte,
-                   p.description, p.date_creation,
+                   p.description, p.prix_unitaire, p.date_creation,
                    f.id AS fam_id, f.nom AS fam_nom
             FROM produit p LEFT JOIN famille f ON p.famille_id = f.id
             """ + (inclureInactifs ? "" : "WHERE p.statut = 'Actif' ") + "ORDER BY p.code";
@@ -42,7 +42,7 @@ public class ProduitDAO {
         List<Produit> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT p.id, p.code, p.libelle, p.unite, p.statut, p.seuil_alerte,
-                   p.description, p.date_creation,
+                   p.description, p.prix_unitaire, p.date_creation,
                    f.id AS fam_id, f.nom AS fam_nom
             FROM produit p LEFT JOIN famille f ON p.famille_id = f.id WHERE 1=1
             """);
@@ -70,7 +70,7 @@ public class ProduitDAO {
     public Optional<Produit> findById(String id) {
         String sql = """
             SELECT p.id, p.code, p.libelle, p.unite, p.statut, p.seuil_alerte,
-                   p.description, p.date_creation,
+                   p.description, p.prix_unitaire, p.date_creation,
                    f.id AS fam_id, f.nom AS fam_nom
             FROM produit p LEFT JOIN famille f ON p.famille_id = f.id WHERE p.id=?
             """;
@@ -92,8 +92,8 @@ public class ProduitDAO {
     // ── Sauvegarder / Mettre à jour ──────────────────────────────
     public String save(Produit p) {
         String sql = """
-            INSERT INTO produit (id, code, libelle, famille_id, unite, statut, seuil_alerte, description)
-            VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO produit (id, code, libelle, famille_id, unite, statut, seuil_alerte, description, prix_unitaire)
+            VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -104,9 +104,12 @@ public class ProduitDAO {
             ps.setString(5, p.getStatut().name());
             ps.setInt(6, p.getSeuilAlerte());
             ps.setString(7, p.getDescription());
+            ps.setBigDecimal(8, p.getPrixUnitaire() != null ? p.getPrixUnitaire() : BigDecimal.ZERO);
             ps.executeUpdate();
             // Récupérer l'UUID généré
             String idGenere = findIdByCode(p.getCode(), c);
+            p.setId(idGenere);
+            syncTarifStandard(p, c);
             return idGenere;
         } catch (SQLException e) {
             log.error("save produit", e);
@@ -117,7 +120,7 @@ public class ProduitDAO {
     public void update(Produit p) {
         String sql = """
             UPDATE produit SET code=?, libelle=?, famille_id=?, unite=?,
-            statut=?, seuil_alerte=?, description=? WHERE id=?
+            statut=?, seuil_alerte=?, description=?, prix_unitaire=? WHERE id=?
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -128,11 +131,43 @@ public class ProduitDAO {
             ps.setString(5, p.getStatut().name());
             ps.setInt(6, p.getSeuilAlerte());
             ps.setString(7, p.getDescription());
-            ps.setString(8, p.getId());
+            ps.setBigDecimal(8, p.getPrixUnitaire() != null ? p.getPrixUnitaire() : BigDecimal.ZERO);
+            ps.setString(9, p.getId());
             ps.executeUpdate();
+            syncTarifStandard(p, c);
         } catch (SQLException e) {
             log.error("update produit", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    private void syncTarifStandard(Produit p, Connection c) {
+        if (p.getId() == null || p.getPrixUnitaire() == null) return;
+        try {
+            // Mettre à jour le tarif standard existant ou en insérer un
+            String checkSql = "SELECT id FROM tarif WHERE produit_id=? AND type_tarif='Standard' LIMIT 1";
+            try (PreparedStatement psCheck = c.prepareStatement(checkSql)) {
+                psCheck.setString(1, p.getId());
+                ResultSet rs = psCheck.executeQuery();
+                if (rs.next()) {
+                    String updateTarifSql = "UPDATE tarif SET montant=? WHERE id=?";
+                    try (PreparedStatement psUp = c.prepareStatement(updateTarifSql)) {
+                        psUp.setBigDecimal(1, p.getPrixUnitaire());
+                        psUp.setString(2, rs.getString("id"));
+                        psUp.executeUpdate();
+                    }
+                } else {
+                    String insertTarifSql = "INSERT INTO tarif (id, produit_id, type_tarif, montant, date_debut, statut) "
+                        + "VALUES (UUID(), ?, 'Standard', ?, CURRENT_DATE, 'Actif')";
+                    try (PreparedStatement psIn = c.prepareStatement(insertTarifSql)) {
+                        psIn.setString(1, p.getId());
+                        psIn.setBigDecimal(2, p.getPrixUnitaire());
+                        psIn.executeUpdate();
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            log.warn("syncTarifStandard produit {}: {}", p.getCode(), ex.getMessage());
         }
     }
 
@@ -219,6 +254,52 @@ public class ProduitDAO {
         return list;
     }
 
+    public Famille saveFamille(String nom) {
+        if (nom == null || nom.trim().isEmpty()) {
+            throw new IllegalArgumentException("Le nom de la famille ne peut pas être vide.");
+        }
+        String sql = "INSERT INTO famille (id, nom) VALUES (UUID(), ?)";
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, nom.trim());
+            ps.executeUpdate();
+            try (PreparedStatement psSel = c.prepareStatement("SELECT id FROM famille WHERE nom=?")) {
+                psSel.setString(1, nom.trim());
+                ResultSet rs = psSel.executeQuery();
+                if (rs.next()) {
+                    return new Famille(rs.getString("id"), nom.trim());
+                }
+            }
+        } catch (SQLException e) {
+            log.error("saveFamille", e);
+            throw new RuntimeException("Erreur lors de l'ajout de la famille : " + e.getMessage(), e);
+        }
+        return new Famille(java.util.UUID.randomUUID().toString(), nom.trim());
+    }
+
+    public String genererCode(String familleId) {
+        String prefix = "PRD";
+        if (familleId != null && !familleId.isBlank()) {
+            try (Connection c = db.getConnection();
+                 PreparedStatement ps = c.prepareStatement("SELECT nom FROM famille WHERE id=?")) {
+                ps.setString(1, familleId);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    String fNom = rs.getString("nom").toUpperCase().replaceAll("[^A-Z]", "");
+                    if (fNom.length() >= 3) prefix = fNom.substring(0, 3);
+                    else if (!fNom.isEmpty()) prefix = fNom;
+                }
+            } catch (SQLException ignored) {}
+        }
+        int nextNum = 1;
+        try (Connection c = db.getConnection();
+             Statement st = c.createStatement();
+             ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM produit")) {
+            if (rs.next()) nextNum = rs.getInt(1) + 1;
+        } catch (SQLException ignored) {}
+        return String.format("%s-%03d", prefix, nextNum);
+    }
+
     // ── Compter les produits ─────────────────────────────────────
     public int countActifs() {
         try (Connection c = db.getConnection();
@@ -249,6 +330,10 @@ public class ProduitDAO {
         p.setStatut(Produit.Statut.valueOf(rs.getString("statut")));
         p.setSeuilAlerte(rs.getInt("seuil_alerte"));
         p.setDescription(rs.getString("description"));
+        try {
+            BigDecimal px = rs.getBigDecimal("prix_unitaire");
+            if (px != null) p.setPrixUnitaire(px);
+        } catch (SQLException ignored) {}
         Timestamp dc = rs.getTimestamp("date_creation");
         if (dc != null) p.setDateCreation(dc.toLocalDateTime());
         String famId = rs.getString("fam_id");

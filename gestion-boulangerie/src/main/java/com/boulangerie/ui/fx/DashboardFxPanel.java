@@ -71,11 +71,11 @@ public class DashboardFxPanel extends FxPanelBase {
         HBox row = new HBox(12);
 
         // Créer chaque carte et garder une référence directe aux labels
-        KpiCard ca       = new KpiCard("CA du jour",        "#1267C4", BootstrapIcons.CASH_STACK);
-        KpiCard sorties  = new KpiCard("Sorties nettes",    "#1A8754", BootstrapIcons.TRUCK);
-        KpiCard creances = new KpiCard("Créances en cours", "#E6940C", BootstrapIcons.CLOCK_HISTORY);
-        KpiCard bloques  = new KpiCard("Clients bloqués",   "#DC3545", BootstrapIcons.SLASH_CIRCLE);
-        KpiCard ecarts   = new KpiCard("Écarts de caisse",  "#DC3545", BootstrapIcons.EXCLAMATION_TRIANGLE_FILL);
+        KpiCard ca       = new KpiCard("CA du jour",        "#1F3A5F", BootstrapIcons.CASH_STACK);
+        KpiCard sorties  = new KpiCard("Sorties nettes",    "#2E7D32", BootstrapIcons.TRUCK);
+        KpiCard creances = new KpiCard("Créances en cours", "#F5A623", BootstrapIcons.CLOCK_HISTORY);
+        KpiCard bloques  = new KpiCard("Clients bloqués",   "#C62828", BootstrapIcons.SLASH_CIRCLE);
+        KpiCard ecarts   = new KpiCard("Écarts de caisse",  "#C62828", BootstrapIcons.EXCLAMATION_TRIANGLE_FILL);
 
         // Stocker les références AVANT d'ajouter dans le HBox
         lblCA       = ca.valLabel;
@@ -171,9 +171,9 @@ public class DashboardFxPanel extends FxPanelBase {
             new Shortcut("Produits",     MainWindow.PRODUITS,     "assets/Image 1 1.png", BootstrapIcons.BOX_SEAM),
             new Shortcut("Clients",      MainWindow.CLIENTS,      "assets/Image 3 1.png", BootstrapIcons.PEOPLE),
             new Shortcut("Sorties",      MainWindow.SORTIES,      "assets/Image 1.png",   BootstrapIcons.TRUCK),
-            new Shortcut("Facturation",  MainWindow.FACTURATION,  "assets/Image 1 3.png", BootstrapIcons.RECEIPT),
             new Shortcut("Caisse",       MainWindow.CAISSE,       "assets/Image 1 4.png", BootstrapIcons.CASH_STACK),
             new Shortcut("Recouvrement", MainWindow.RECOUVREMENT, "assets/Image 1 5.png", BootstrapIcons.BAR_CHART_LINE),
+            new Shortcut("Rapports",     MainWindow.RAPPORTS,     "assets/Image 1 3.png", BootstrapIcons.FILE_EARMARK_BAR_GRAPH),
         };
 
         for (int i = 0; i < items.length; i++) {
@@ -263,7 +263,7 @@ public class DashboardFxPanel extends FxPanelBase {
                 boolean ok = d.ecarts.compareTo(BigDecimal.ZERO) == 0;
                 lblVarEcarts.setText(ok ? "✓ OK" : "⚠ À régulariser");
                 lblVarEcarts.setStyle("-fx-font-size:11px; -fx-text-fill:"
-                    + (ok ? "#1A8754" : "#DC3545") + ";");
+                    + (ok ? "#2E7D32" : "#C62828") + ";");
             }
 
             if (pnlActivite != null) refreshActivites(d.activites);
@@ -286,10 +286,10 @@ public class DashboardFxPanel extends FxPanelBase {
             row.setStyle("-fx-border-color:transparent transparent #EEF2F7 transparent; -fx-border-width:0 0 1 0;");
 
             String iconColor = switch (a.getAction() != null ? a.getAction() : "") {
-                case "CREATE"  -> "#1A8754";
-                case "DELETE", "BLOCK", "ECART" -> "#DC3545";
-                case "UPDATE"  -> "#E6940C";
-                case "LOGIN"   -> "#1267C4";
+                case "CREATE"  -> "#2E7D32";
+                case "DELETE", "BLOCK", "ECART" -> "#C62828";
+                case "UPDATE"  -> "#F5A623";
+                case "LOGIN"   -> "#2E5A88";
                 case "UNBLOCK" -> "#7B2FBE";
                 default        -> "#9AA0A6";
             };
@@ -321,18 +321,18 @@ public class DashboardFxPanel extends FxPanelBase {
     private void refreshAlertes(DashData d) {
         pnlAlertes.getChildren().clear();
         if (d.bloques > 0)
-            pnlAlertes.getChildren().add(alertRow("#DC3545","#FDE8EA",
+            pnlAlertes.getChildren().add(alertRow("#C62828","#FDE8EA",
                 "🔴  " + d.bloques + " client(s) bloqué(s)", "Voir →", MainWindow.CLIENTS));
         if (d.creances != null && d.creances.compareTo(BigDecimal.ZERO) > 0)
-            pnlAlertes.getChildren().add(alertRow("#E6940C","#FFF8E1",
-                "🟡  Créances : " + FormatUtil.montant(d.creances) + " FCFA", "Détail →", MainWindow.FACTURATION));
+            pnlAlertes.getChildren().add(alertRow("#F5A623","#FFF8E1",
+                "🟡  Créances : " + FormatUtil.montant(d.creances) + " FCFA", "Détail →", MainWindow.CAISSE));
         if (d.ecarts != null && d.ecarts.compareTo(BigDecimal.ZERO) < 0)
-            pnlAlertes.getChildren().add(alertRow("#DC3545","#FDE8EA",
+            pnlAlertes.getChildren().add(alertRow("#C62828","#FDE8EA",
                 "🔴  Écart caisse : " + FormatUtil.montant(d.ecarts) + " FCFA", "Rapproch. →", MainWindow.RECOUVREMENT));
 
         if (pnlAlertes.getChildren().isEmpty()) {
             Label ok = new Label("✅  Aucune alerte active");
-            ok.setStyle("-fx-text-fill:#1A8754; -fx-font-size:13px; -fx-padding:8 0;");
+            ok.setStyle("-fx-text-fill:#2E7D32; -fx-font-size:13px; -fx-padding:8 0;");
             pnlAlertes.getChildren().add(ok);
         }
     }

@@ -12,15 +12,13 @@ public class Client {
     private String code;
     private String nom;
     private String quartier;
-    private String ville;
+    private String adresse;
     private String telephone;
     private String email;
     private CategorieClient categorie;
     private boolean estAnonyme;
     private TypeClient typeClient;
     private Utilisateur livreurRattache;
-    private int delaiPaiement;
-    private BigDecimal plafondCredit;
     private BigDecimal soldePrecedent;
     private BigDecimal soldeActuel;
     private Statut statut;
@@ -29,8 +27,6 @@ public class Client {
     private LocalDate derniereFactureDate;
 
     public Client() {
-        this.delaiPaiement = 30;
-        this.plafondCredit  = BigDecimal.ZERO;
         this.soldePrecedent = BigDecimal.ZERO;
         this.soldeActuel    = BigDecimal.ZERO;
         this.statut         = Statut.Actif;
@@ -46,8 +42,10 @@ public class Client {
     public void setNom(String nom) { this.nom = nom; }
     public String getQuartier() { return quartier; }
     public void setQuartier(String quartier) { this.quartier = quartier; }
-    public String getVille() { return ville; }
-    public void setVille(String ville) { this.ville = ville; }
+    public String getAdresse() { return adresse; }
+    public void setAdresse(String adresse) { this.adresse = adresse; }
+    public String getVille() { return adresse; }
+    public void setVille(String ville) { this.adresse = ville; }
     public String getTelephone() { return telephone; }
     public void setTelephone(String telephone) { this.telephone = telephone; }
     public String getEmail() { return email; }
@@ -60,10 +58,6 @@ public class Client {
     public void setTypeClient(TypeClient typeClient) { this.typeClient = typeClient; }
     public Utilisateur getLivreurRattache() { return livreurRattache; }
     public void setLivreurRattache(Utilisateur livreurRattache) { this.livreurRattache = livreurRattache; }
-    public int getDelaiPaiement() { return delaiPaiement; }
-    public void setDelaiPaiement(int delaiPaiement) { this.delaiPaiement = delaiPaiement; }
-    public BigDecimal getPlafondCredit() { return plafondCredit; }
-    public void setPlafondCredit(BigDecimal plafondCredit) { this.plafondCredit = plafondCredit; }
     public BigDecimal getSoldePrecedent() { return soldePrecedent; }
     public void setSoldePrecedent(BigDecimal soldePrecedent) { this.soldePrecedent = soldePrecedent; }
     public BigDecimal getSoldeActuel() { return soldeActuel; }
@@ -75,9 +69,13 @@ public class Client {
     public LocalDateTime getDateCreation() { return dateCreation; }
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
 
-    public Integer getDelaiPaiementJours() { return delaiPaiement; }
     public LocalDate getDerniereFactureDate() { return derniereFactureDate; }
     public void setDerniereFactureDate(LocalDate d) { this.derniereFactureDate = d; }
+
+    // Compatibilité
+    public BigDecimal getPlafondCredit() { return BigDecimal.ZERO; }
+    public int getDelaiPaiement() { return 0; }
+    public Integer getDelaiPaiementJours() { return null; }
 
     public boolean isBloque() { return Statut.Bloqué.equals(statut); }
     public boolean isNominatif() { return TypeClient.Nominatif.equals(typeClient); }

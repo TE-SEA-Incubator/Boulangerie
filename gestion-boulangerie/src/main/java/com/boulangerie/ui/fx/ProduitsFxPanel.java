@@ -49,16 +49,14 @@ public class ProduitsFxPanel extends FxPanelBase {
 
         Button btnNouv  = btnPrimary("+ Nouveau produit", BootstrapIcons.PLUS_CIRCLE);
         Button btnEdit  = btnOutline("Modifier");
-        Button btnTarif = btnOutline("Gérer les tarifs");
         Button btnPDF   = btnOutline("Export PDF");
 
         btnNouv.setOnAction(e -> ouvrirFormulaire(null));
         btnEdit.setOnAction(e -> ouvrirFormulaireSelection());
-        btnTarif.setOnAction(e -> gererTarifs());
         btnPDF.setOnAction(e  -> exporterPDF());
 
         HBox toolbar = toolbar(
-            btnNouv, btnEdit, btnTarif,
+            btnNouv, btnEdit,
             new Separator(javafx.geometry.Orientation.VERTICAL),
             searchField, cboFamille, btnPDF);
 
@@ -70,6 +68,7 @@ public class ProduitsFxPanel extends FxPanelBase {
         TableColumn<Produit, String> colCode     = new TableColumn<>("Code");
         TableColumn<Produit, String> colLib      = new TableColumn<>("Libellé");
         TableColumn<Produit, String> colFam      = new TableColumn<>("Famille");
+        TableColumn<Produit, String> colPrix     = new TableColumn<>("Prix unitaire (FCFA)");
         TableColumn<Produit, String> colUnite    = new TableColumn<>("Unité");
         TableColumn<Produit, String> colStatut   = new TableColumn<>("Statut");
         TableColumn<Produit, String> colSeuil    = new TableColumn<>("Seuil alerte");
@@ -78,6 +77,9 @@ public class ProduitsFxPanel extends FxPanelBase {
         colLib  .setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getLibelle()));
         colFam  .setCellValueFactory(d -> new SimpleStringProperty(
             d.getValue().getFamille() != null ? d.getValue().getFamille().getNom() : "—"));
+        colPrix .setCellValueFactory(d -> new SimpleStringProperty(
+            FormatUtil.montant(d.getValue().getPrixUnitaire()) + " FCFA"));
+        colPrix.setStyle("-fx-font-weight: bold; -fx-text-fill: #1F3A5F;");
         colUnite.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getUnite()));
         colStatut.setCellValueFactory(d -> new SimpleStringProperty(
             d.getValue().getStatut() != null ? d.getValue().getStatut().name() : "—"));
@@ -89,7 +91,7 @@ public class ProduitsFxPanel extends FxPanelBase {
         colSeuil.setCellValueFactory(d -> new SimpleStringProperty(
             String.valueOf(d.getValue().getSeuilAlerte())));
 
-        table.getColumns().addAll(colCode, colLib, colFam, colUnite, colStatut, colSeuil);
+        table.getColumns().addAll(colCode, colLib, colFam, colPrix, colUnite, colStatut, colSeuil);
 
         // ── Footer ────────────────────────────────────────────────
         lblCount = footerCount("0 produits");
@@ -101,7 +103,7 @@ public class ProduitsFxPanel extends FxPanelBase {
         HBox titreRow = new HBox(10);
         titreRow.setAlignment(Pos.CENTER_LEFT);
         if (imgPain != null) titreRow.getChildren().add(imgPain);
-        Label titreLabel = sectionTitle("Catalogue Produits & Tarifs");
+        Label titreLabel = sectionTitle("Catalogue des Produits");
         titreRow.getChildren().add(titreLabel);
 
         Region accent = new Region();
@@ -116,12 +118,20 @@ public class ProduitsFxPanel extends FxPanelBase {
         root.setCenter(body);
 
         // Charger familles
+        chargerFamilles(null);
+    }
+
+    private void chargerFamilles(String selectionnerId) {
         runAsync(() -> produitDAO.findAllFamilles(), familles -> {
-            Famille tout = new Famille("", "Toutes");
+            Famille tout = new Famille("", "Toutes les familles");
             cboFamille.getItems().clear();
             cboFamille.getItems().add(tout);
             cboFamille.getItems().addAll(familles);
-            cboFamille.setValue(tout);
+            if (selectionnerId != null) {
+                familles.stream().filter(f -> selectionnerId.equals(f.getId())).findFirst().ifPresent(cboFamille::setValue);
+            } else {
+                cboFamille.setValue(tout);
+            }
         });
     }
 
@@ -140,43 +150,99 @@ public class ProduitsFxPanel extends FxPanelBase {
     }
 
     private void ouvrirFormulaire(Produit p) {
-        // Dialog de création/modification (simple pour cette version)
+        final boolean isNouveau = (p == null);
         Dialog<Produit> dlg = new Dialog<>();
-        dlg.setTitle(p == null ? "Nouveau produit" : "Modifier — " + p.getCode());
-        dlg.setHeaderText(null);
-        dlg.getDialogPane().setPrefWidth(520);
+        dlg.setTitle(isNouveau ? "Nouveau produit" : "Modifier — " + p.getCode());
+        dlg.setHeaderText(isNouveau ? "Saisie d'un nouveau produit (code généré automatiquement)" : "Modification du produit");
+        dlg.getDialogPane().setPrefWidth(540);
         dlg.initOwner(mainWindow.getStage());
 
         GridPane form = new GridPane();
         form.setHgap(14); form.setVgap(10);
         form.setPadding(new Insets(20));
-        // Colonnes bien dimensionnées pour éviter la troncature des labels
         ColumnConstraints c0 = new ColumnConstraints();
-        c0.setMinWidth(150); c0.setPrefWidth(170); c0.setHgrow(Priority.NEVER);
+        c0.setMinWidth(160); c0.setPrefWidth(170); c0.setHgrow(Priority.NEVER);
         ColumnConstraints c1 = new ColumnConstraints();
-        c1.setHgrow(Priority.ALWAYS); c1.setFillWidth(true); c1.setMinWidth(220);
+        c1.setHgrow(Priority.ALWAYS); c1.setFillWidth(true); c1.setMinWidth(240);
         form.getColumnConstraints().addAll(c0, c1);
 
-        TextField txtCode    = new TextField(p != null ? p.getCode()    : "");
-        TextField txtLib     = new TextField(p != null ? p.getLibelle() : "");
-        TextField txtUnite   = new TextField(p != null ? p.getUnite()   : "Pièce");
-        TextField txtSeuil   = new TextField(p != null ? String.valueOf(p.getSeuilAlerte()) : "0");
+        // Code auto-généré
+        TextField txtCode = new TextField();
+        txtCode.setEditable(false);
+        txtCode.setStyle("-fx-background-color: #F1F3F4; -fx-text-fill: #3C4043; -fx-font-weight: bold;");
+
+        ComboBox<Famille> cboFamilleForm = new ComboBox<>();
+        // Charger les familles actuelles
+        List<Famille> famillesActuelles = produitDAO.findAllFamilles();
+        cboFamilleForm.getItems().setAll(famillesActuelles);
+        if (p != null && p.getFamille() != null) {
+            famillesActuelles.stream().filter(f -> f.getId().equals(p.getFamille().getId())).findFirst()
+                .ifPresent(cboFamilleForm::setValue);
+        } else if (!famillesActuelles.isEmpty()) {
+            cboFamilleForm.setValue(famillesActuelles.get(0));
+        }
+
+        // Si nouveau produit, générer le code selon la famille
+        if (isNouveau) {
+            String famId = cboFamilleForm.getValue() != null ? cboFamilleForm.getValue().getId() : null;
+            txtCode.setText(produitDAO.genererCode(famId));
+        } else {
+            txtCode.setText(p.getCode());
+        }
+
+        // Bouton ajout nouvelle famille
+        Button btnNouvelleFamille = new Button("+ Famille");
+        btnNouvelleFamille.setStyle("-fx-background-color: #FFF3E0; -fx-text-fill: #1F3A5F; -fx-border-color: #F5A623; -fx-border-radius: 4; -fx-cursor: hand;");
+        btnNouvelleFamille.setOnAction(ev -> {
+            TextInputDialog famDlg = new TextInputDialog();
+            famDlg.setTitle("Ajouter une famille");
+            famDlg.setHeaderText("Création d'une nouvelle famille de produits");
+            famDlg.setContentText("Nom de la nouvelle famille :");
+            famDlg.showAndWait().ifPresent(nom -> {
+                if (!nom.trim().isEmpty()) {
+                    try {
+                        Famille nf = produitDAO.saveFamille(nom.trim());
+                        cboFamilleForm.getItems().add(nf);
+                        cboFamilleForm.setValue(nf);
+                        chargerFamilles(nf.getId());
+                        if (isNouveau) {
+                            txtCode.setText(produitDAO.genererCode(nf.getId()));
+                        }
+                    } catch (Exception ex) {
+                        mainWindow.showAlert("Erreur", ex.getMessage(), Alert.AlertType.ERROR);
+                    }
+                }
+            });
+        });
+
+        HBox familleBox = new HBox(8, cboFamilleForm, btnNouvelleFamille);
+        HBox.setHgrow(cboFamilleForm, Priority.ALWAYS);
+        cboFamilleForm.setMaxWidth(Double.MAX_VALUE);
+
+        cboFamilleForm.setOnAction(ev -> {
+            if (isNouveau && cboFamilleForm.getValue() != null) {
+                txtCode.setText(produitDAO.genererCode(cboFamilleForm.getValue().getId()));
+            }
+        });
+
+        TextField txtLib   = new TextField(p != null ? p.getLibelle() : "");
+        TextField txtPrix  = new TextField(p != null && p.getPrixUnitaire() != null ? p.getPrixUnitaire().toPlainString() : "0");
+        TextField txtUnite = new TextField(p != null ? p.getUnite() : "Pièce");
+        TextField txtSeuil = new TextField(p != null ? String.valueOf(p.getSeuilAlerte()) : "0");
         TextArea txtDescription = new TextArea(p != null && p.getDescription() != null ? p.getDescription() : "");
         txtDescription.setPrefRowCount(3);
-        ComboBox<Famille> cboFamilleForm = new ComboBox<>(FXCollections.observableArrayList(cboFamille.getItems()));
-        cboFamilleForm.getItems().removeIf(f -> f.getId() == null || f.getId().isBlank());
-        cboFamilleForm.setValue(p != null ? p.getFamille() : null);
-        ComboBox<String> cboStatut = new ComboBox<>(
-            FXCollections.observableArrayList("Actif", "Inactif"));
+
+        ComboBox<String> cboStatut = new ComboBox<>(FXCollections.observableArrayList("Actif", "Inactif"));
         cboStatut.setValue(p != null && p.getStatut() != null ? p.getStatut().name() : "Actif");
 
-        form.addRow(0, new Label("Code *"),    txtCode);
-        form.addRow(1, new Label("Libellé *"), txtLib);
-        form.addRow(2, new Label("Famille *"), cboFamilleForm);
-        form.addRow(3, new Label("Unité *"),   txtUnite);
-        form.addRow(4, new Label("Seuil alerte"), txtSeuil);
-        form.addRow(5, new Label("Statut"),    cboStatut);
-        form.addRow(6, new Label("Description"), txtDescription);
+        form.addRow(0, new Label("Code produit (auto)"), txtCode);
+        form.addRow(1, new Label("Libellé du produit *"), txtLib);
+        form.addRow(2, new Label("Famille *"),            familleBox);
+        form.addRow(3, new Label("Prix unitaire (FCFA) *"), txtPrix);
+        form.addRow(4, new Label("Unité de vente *"),     txtUnite);
+        form.addRow(5, new Label("Seuil d'alerte"),       txtSeuil);
+        form.addRow(6, new Label("Statut"),               cboStatut);
+        form.addRow(7, new Label("Description"),          txtDescription);
 
         dlg.getDialogPane().setContent(form);
         dlg.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -189,8 +255,18 @@ public class ProduitsFxPanel extends FxPanelBase {
                 np.setFamille(cboFamilleForm.getValue());
                 np.setUnite(txtUnite.getText().trim());
                 np.setDescription(txtDescription.getText().trim());
-                try { np.setSeuilAlerte(Integer.parseInt(txtSeuil.getText().trim())); }
-                catch (NumberFormatException e) { throw new IllegalArgumentException("Le seuil doit être un nombre entier."); }
+                try {
+                    BigDecimal prixVal = new BigDecimal(txtPrix.getText().trim().replace(',', '.'));
+                    if (prixVal.signum() < 0) throw new NumberFormatException();
+                    np.setPrixUnitaire(prixVal);
+                } catch (Exception ex) {
+                    throw new IllegalArgumentException("Le prix unitaire doit être un montant valide (≥ 0).");
+                }
+                try {
+                    np.setSeuilAlerte(Integer.parseInt(txtSeuil.getText().trim()));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Le seuil d'alerte doit être un nombre entier.");
+                }
                 np.setStatut(Produit.Statut.valueOf(cboStatut.getValue()));
                 return np;
             }
@@ -209,7 +285,7 @@ public class ProduitsFxPanel extends FxPanelBase {
                 else produitDAO.update(np);
                 auditDAO.log(new JournalAudit("Produit", np.getId(),
                     creation ? JournalAudit.CREATE : JournalAudit.UPDATE,
-                    session.getUserId(), session.getLogin(), "Produit: " + np.getCode()));
+                    session.getUserId(), session.getLogin(), "Produit: " + np.getCode() + " (" + np.getPrixUnitaire() + " FCFA)"));
                 return true;
             }, ok -> refresh());
         });
@@ -222,63 +298,5 @@ public class ProduitsFxPanel extends FxPanelBase {
 
     private void exporterPDF() {
         mainWindow.navigate(MainWindow.RAPPORTS);
-    }
-
-    private void gererTarifs() {
-        Produit selected = table.getSelectionModel().getSelectedItem();
-        if (selected == null) {
-            mainWindow.showAlert("Tarifs", "Sélectionnez un produit.", Alert.AlertType.INFORMATION);
-            return;
-        }
-        runAsync(() -> produitDAO.findById(selected.getId()).orElseThrow(), this::ouvrirDialogTarifs);
-    }
-
-    private void ouvrirDialogTarifs(Produit produit) {
-        Dialog<Void> dlg = new Dialog<>();
-        dlg.setTitle("Tarifs - " + produit.getLibelle());
-        dlg.setHeaderText("Les tarifs sont datés : aucune facture déjà émise ne sera modifiée.");
-        dlg.getDialogPane().setPrefWidth(680);
-
-        TableView<Tarif> tarifs = styledTable();
-        tarifs.setPrefHeight(220);
-        TableColumn<Tarif, String> type = new TableColumn<>("Type");
-        type.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getTypeTarif().name()));
-        TableColumn<Tarif, String> montant = new TableColumn<>("Montant FCFA");
-        montant.setCellValueFactory(d -> new SimpleStringProperty(FormatUtil.montant(d.getValue().getMontant())));
-        TableColumn<Tarif, String> debut = new TableColumn<>("Début");
-        debut.setCellValueFactory(d -> new SimpleStringProperty(FormatUtil.date(d.getValue().getDateDebut())));
-        TableColumn<Tarif, String> fin = new TableColumn<>("Fin");
-        fin.setCellValueFactory(d -> new SimpleStringProperty(FormatUtil.date(d.getValue().getDateFin())));
-        tarifs.getColumns().addAll(type, montant, debut, fin);
-        tarifs.getItems().setAll(produit.getTarifs());
-
-        ComboBox<Tarif.TypeTarif> cboType = new ComboBox<>(FXCollections.observableArrayList(Tarif.TypeTarif.values()));
-        cboType.setValue(Tarif.TypeTarif.Standard);
-        TextField txtMontant = new TextField();
-        DatePicker dpDebut = new DatePicker(LocalDate.now());
-        DatePicker dpFin = new DatePicker();
-        Button ajouter = btnPrimary("Ajouter le tarif", BootstrapIcons.PLUS_CIRCLE);
-        ajouter.setOnAction(e -> {
-            try {
-                BigDecimal valeur = new BigDecimal(txtMontant.getText().trim().replace(',', '.'));
-                if (valeur.signum() < 0) throw new NumberFormatException();
-                Tarif tarif = new Tarif();
-                tarif.setProduitId(produit.getId()); tarif.setTypeTarif(cboType.getValue());
-                tarif.setMontant(valeur); tarif.setDateDebut(dpDebut.getValue()); tarif.setDateFin(dpFin.getValue());
-                tarif.setStatut(Tarif.Statut.Actif);
-                runAsync(() -> { produitDAO.saveTarif(tarif); return produitDAO.findTarifs(produit.getId()); }, list -> {
-                    tarifs.getItems().setAll(list); txtMontant.clear(); dpFin.setValue(null);
-                });
-            } catch (Exception ex) {
-                mainWindow.showAlert("Tarif", "Saisissez un montant positif et une date de début.", Alert.AlertType.WARNING);
-            }
-        });
-        GridPane form = new GridPane(); form.setHgap(8); form.setVgap(8);
-        form.addRow(0, new Label("Type"), cboType, new Label("Montant"), txtMontant);
-        form.addRow(1, new Label("Début"), dpDebut, new Label("Fin"), dpFin);
-        VBox box = new VBox(12, tarifs, new Label("Nouveau tarif"), form, ajouter);
-        box.setPadding(new Insets(12));
-        dlg.getDialogPane().setContent(box); dlg.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        dlg.showAndWait();
     }
 }
