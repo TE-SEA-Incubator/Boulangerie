@@ -108,6 +108,7 @@ CREATE TABLE IF NOT EXISTS client (
     code               VARCHAR(20)    NOT NULL UNIQUE,
     nom                VARCHAR(150)   NOT NULL,
     quartier           VARCHAR(100),
+    adresse            VARCHAR(255),
     ville              VARCHAR(100),
     telephone          VARCHAR(20),
     email              VARCHAR(100),
@@ -115,7 +116,7 @@ CREATE TABLE IF NOT EXISTS client (
     est_anonyme        TINYINT(1)     NOT NULL DEFAULT 0,
     type_client        ENUM('Nominatif','Anonyme') NOT NULL DEFAULT 'Nominatif',
     livreur_rattache   VARCHAR(36),    -- FK utilisateur livreur
-    delai_paiement     INT            NOT NULL DEFAULT 30,
+    delai_paiement     INT            NOT NULL DEFAULT 0,
     plafond_credit     DECIMAL(15,2)  NOT NULL DEFAULT 0,
     solde_precedent    DECIMAL(15,2)  NOT NULL DEFAULT 0,
     solde_actuel       DECIMAL(15,2)  NOT NULL DEFAULT 0,

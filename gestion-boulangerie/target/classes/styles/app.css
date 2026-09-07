@@ -368,3 +368,49 @@
 .text-warning { -fx-text-fill: -app-ambre; }
 .text-primary { -fx-text-fill: -app-bleu-moyen; }
 .separator-muted { -fx-background-color: -app-bordure; }
+
+/* ════════════════════════════════════════════════════════════
+   TABPANE & CONTRÔLES FORMULAIRES
+   ════════════════════════════════════════════════════════════ */
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: transparent;
+}
+.tab-pane .tab {
+    -fx-background-color: #EDE8DE;
+    -fx-background-radius: 6 6 0 0;
+    -fx-padding: 8 16;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-text-base-color: #5F6368;
+    -fx-cursor: hand;
+}
+.tab-pane .tab:selected {
+    -fx-background-color: white;
+    -fx-text-base-color: -app-bleu-nuit;
+    -fx-border-color: #DADCE0 #DADCE0 transparent #DADCE0;
+    -fx-border-width: 1;
+    -fx-border-radius: 6 6 0 0;
+}
+.date-picker .arrow-button {
+    -fx-background-color: -app-bleu-nuit;
+    -fx-background-radius: 0 4 4 0;
+    -fx-cursor: hand;
+}
+.date-picker .arrow-button .arrow {
+    -fx-background-color: white;
+}
+.combo-box, .text-field, .date-picker {
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+.dialog-pane {
+    -fx-background-color: #F8F9FA;
+}
+.dialog-pane .header-panel {
+    -fx-background-color: -app-bleu-nuit;
+}
+.dialog-pane .header-panel .label {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}

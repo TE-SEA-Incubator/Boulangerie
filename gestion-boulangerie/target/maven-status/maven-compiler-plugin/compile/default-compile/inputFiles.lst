@@ -20,6 +20,7 @@
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/ClotureJournaliere.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/Facture.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/Famille.java
+/home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/FicheCaisseLigne.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/FicheJournaliere.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/JournalAudit.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/LigneSortie.java
@@ -36,9 +37,11 @@
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/CaisseService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/ClotureService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/DeblocageService.java
+/home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/ExcelExportService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/FacturationService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/LoginAttemptService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/PdfService.java
+/home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/PrevisionService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/SessionService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/service/TarifService.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/ui/LoginFrame.java

@@ -400,7 +400,7 @@ public class CaisseFxPanel extends FxPanelBase {
         conf.setHeaderText(null);
         conf.showAndWait().filter(b -> b == ButtonType.OK).ifPresent(b -> {
             runAsync(() -> {
-                caisseService.validerCloture(date, null);
+                caisseService.cloturerJour(date, null);
                 return true;
             }, ok -> {
                 mainWindow.showAlert("Succès", "Clôture de la journée " + FormatUtil.date(date) + " validée avec succès.", Alert.AlertType.INFORMATION);

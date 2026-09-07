@@ -191,7 +191,6 @@ public class CaisseService {
         v.setMontantEnregistre(montantRecu);
 
         BigDecimal ecart = montantRecu.subtract(ligne.getTotalSolde());
-        v.setEcart(ecart);
         if (motifEcart != null && !motifEcart.isBlank()) {
             v.setMotifEcart(motifEcart);
         } else if (ecart.compareTo(BigDecimal.ZERO) < 0) {

@@ -11,6 +11,7 @@ com/boulangerie/ui/fx/AuditFxPanel.class
 com/boulangerie/ui/panels/FacturationPanel$1.class
 com/boulangerie/ui/panels/DashboardPanel$DashboardData.class
 com/boulangerie/dao/VersementDAO.class
+com/boulangerie/service/PrevisionService$SynthesePrevision.class
 com/boulangerie/model/AutorisationDeblocage.class
 com/boulangerie/ui/panels/ClientsPanel$1.class
 com/boulangerie/ui/panels/UtilisateursPanel.class
@@ -19,6 +20,7 @@ com/boulangerie/ui/panels/AuditPanel.class
 com/boulangerie/ui/fx/ProduitsFxPanel.class
 com/boulangerie/model/Produit$Statut.class
 com/boulangerie/ui/dialogs/ClientDialog$4.class
+com/boulangerie/service/PrevisionService$PrevisionProduit.class
 com/boulangerie/dao/RemiseExceptionnelleDAO.class
 com/boulangerie/model/Versement.class
 com/boulangerie/ui/components/StyledTable.class
@@ -59,6 +61,7 @@ com/boulangerie/service/FacturationService.class
 com/boulangerie/ui/components/RoundedButton.class
 com/boulangerie/ui/components/KpiCard.class
 com/boulangerie/model/Utilisateur.class
+com/boulangerie/service/ExcelExportService.class
 com/boulangerie/dao/TarifClientDAO.class
 com/boulangerie/ui/fx/CaisseFxPanel$2.class
 com/boulangerie/model/Client.class
@@ -77,6 +80,7 @@ com/boulangerie/ui/dialogs/ClientDialog$3.class
 com/boulangerie/model/Tarif$Statut.class
 com/boulangerie/dao/UtilisateurDAO.class
 com/boulangerie/ui/MainWindow$NavItem.class
+com/boulangerie/ui/fx/SortiesFxPanel$FormComponents.class
 com/boulangerie/util/GenHash.class
 com/boulangerie/ui/panels/SortiesPanel$3.class
 com/boulangerie/ui/fx/SortiesFxPanel$1.class
@@ -84,17 +88,19 @@ com/boulangerie/service/CaisseService.class
 com/boulangerie/model/ClotureJournaliere.class
 com/boulangerie/service/ClotureService.class
 com/boulangerie/ui/dialogs/DeblocageDialog.class
+com/boulangerie/ui/fx/CaisseFxPanel$3.class
+com/boulangerie/service/PrevisionService.class
 com/boulangerie/ui/panels/DashboardPanel.class
 com/boulangerie/ui/LoginFrame.class
 com/boulangerie/ui/panels/RapportsPanel$ExportAction.class
 com/boulangerie/dao/ProduitDAO.class
 com/boulangerie/ui/panels/ClientsPanel$2.class
 com/boulangerie/model/Tarif.class
-com/boulangerie/ui/dialogs/ProduitDialog$1.class
 com/boulangerie/ui/panels/ProduitsPanel$2.class
 com/boulangerie/ui/fx/UtilisateursFxPanel.class
 com/boulangerie/ui/panels/ProduitsPanel$BadgeRenderer.class
 com/boulangerie/ui/dialogs/SaisieDialog$2.class
+com/boulangerie/model/FicheCaisseLigne.class
 com/boulangerie/ui/fx/SortiesFxPanel.class
 com/boulangerie/ui/panels/CaissePanel.class
 com/boulangerie/model/FicheJournaliere.class

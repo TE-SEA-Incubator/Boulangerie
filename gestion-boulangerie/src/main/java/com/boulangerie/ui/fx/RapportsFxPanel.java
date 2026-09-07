@@ -159,7 +159,7 @@ public class RapportsFxPanel extends FxPanelBase {
         dpDateRapport.setPrefWidth(140);
         dpDateRapport.setOnAction(e -> actualiserApercu());
 
-        Button btnPDF = btnPrimary("📄 Exporter PDF (A4)", BootstrapIcons.FILE_EARMARK_PDF_FILL);
+        Button btnPDF = btnPrimary("📄 Exporter PDF (A4)", BootstrapIcons.FILE_TEXT);
         Button btnExcel = btnOutline("📊 Exporter Excel (.csv)");
         Button btnRefresh = btnOutline("⟳ Actualiser");
 

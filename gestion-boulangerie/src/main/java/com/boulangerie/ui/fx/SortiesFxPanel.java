@@ -221,7 +221,18 @@ public class SortiesFxPanel extends FxPanelBase {
         lblMontantTotal.setText("Montant Total : " + FormatUtil.montant(montantTot) + " FCFA");
     }
 
+    private static class FormComponents {
+        ComboBox<Client> cboClient;
+        ComboBox<Produit> cboProduit;
+        Spinner<Integer> spnSortie;
+        Spinner<Integer> spnRetour;
+        TextField txtPrix;
+        TextField txtMotif;
+    }
+
     private void ouvrirFormulaireSortie(LigneSortie existante) {
+        final FormComponents fc = new FormComponents();
+
         Dialog<Boolean> dlg = new Dialog<>();
         dlg.setTitle(existante == null ? "Enregistrer une sortie" : "Modifier la sortie");
         dlg.setHeaderText(null);
@@ -230,28 +241,28 @@ public class SortiesFxPanel extends FxPanelBase {
         List<Client> clients = clientDAO.findAll();
         List<Produit> produits = produitDAO.findAll(false);
 
-        ComboBox<Client> cboClient = new ComboBox<>(FXCollections.observableArrayList(clients));
-        cboClient.setPrefWidth(260);
-        cboClient.setPromptText("Sélectionner le client / livreur...");
+        fc.cboClient = new ComboBox<>(FXCollections.observableArrayList(clients));
+        fc.cboClient.setPrefWidth(260);
+        fc.cboClient.setPromptText("Sélectionner le client / livreur...");
 
-        ComboBox<Produit> cboProduit = new ComboBox<>(FXCollections.observableArrayList(produits));
-        cboProduit.setPrefWidth(260);
-        cboProduit.setPromptText("Sélectionner le produit...");
+        fc.cboProduit = new ComboBox<>(FXCollections.observableArrayList(produits));
+        fc.cboProduit.setPrefWidth(260);
+        fc.cboProduit.setPromptText("Sélectionner le produit...");
 
-        TextField txtPrix = new TextField("0");
-        txtPrix.setPrefWidth(120);
+        fc.txtPrix = new TextField("0");
+        fc.txtPrix.setPrefWidth(120);
 
-        Spinner<Integer> spnSortie = new Spinner<>(0, 99999, 0);
-        spnSortie.setEditable(true);
-        spnSortie.setPrefWidth(120);
+        fc.spnSortie = new Spinner<>(0, 99999, 0);
+        fc.spnSortie.setEditable(true);
+        fc.spnSortie.setPrefWidth(120);
 
-        Spinner<Integer> spnRetour = new Spinner<>(0, 99999, 0);
-        spnRetour.setEditable(true);
-        spnRetour.setPrefWidth(120);
+        fc.spnRetour = new Spinner<>(0, 99999, 0);
+        fc.spnRetour.setEditable(true);
+        fc.spnRetour.setPrefWidth(120);
 
-        TextField txtMotif = new TextField();
-        txtMotif.setPromptText("Motif si retour (ex: invendu, abîmé)...");
-        txtMotif.setPrefWidth(260);
+        fc.txtMotif = new TextField();
+        fc.txtMotif.setPromptText("Motif si retour (ex: invendu, abîmé)...");
+        fc.txtMotif.setPrefWidth(260);
 
         Label lblCalcul = new Label("Total calculé : 0 FCFA");
         lblCalcul.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1A73E8;");
@@ -261,21 +272,21 @@ public class SortiesFxPanel extends FxPanelBase {
         for (int q : new int[]{10, 25, 50, 100}) {
             Button b = new Button("+" + q);
             b.setStyle("-fx-font-size: 11px; -fx-padding: 3 8; -fx-background-color: #EDE8DE; -fx-cursor: hand;");
-            b.setOnAction(e -> spnSortie.getValueFactory().setValue(spnSortie.getValue() + q));
+            b.setOnAction(e -> fc.spnSortie.getValueFactory().setValue(fc.spnSortie.getValue() + q));
             btnRapides.getChildren().add(b);
         }
 
         // Écouteur pour recalcul immédiat
         Runnable recalculer = () -> {
-            Produit p = cboProduit.getValue();
-            if (p != null && (txtPrix.getText() == null || txtPrix.getText().isBlank() || txtPrix.getText().equals("0"))) {
+            Produit p = fc.cboProduit.getValue();
+            if (p != null && (fc.txtPrix.getText() == null || fc.txtPrix.getText().isBlank() || fc.txtPrix.getText().equals("0"))) {
                 if (p.getPrixUnitaire() != null) {
-                    txtPrix.setText(p.getPrixUnitaire().toPlainString());
+                    fc.txtPrix.setText(p.getPrixUnitaire().toPlainString());
                 }
             }
             try {
-                BigDecimal prix = new BigDecimal(txtPrix.getText().trim().replace(" ", "").replace(",", "."));
-                int qteNette = spnSortie.getValue() - spnRetour.getValue();
+                BigDecimal prix = new BigDecimal(fc.txtPrix.getText().trim().replace(" ", "").replace(",", "."));
+                int qteNette = fc.spnSortie.getValue() - fc.spnRetour.getValue();
                 if (qteNette < 0) qteNette = 0;
                 BigDecimal tot = prix.multiply(BigDecimal.valueOf(qteNette));
                 lblCalcul.setText("Total calculé : " + FormatUtil.montant(tot) + " FCFA  (" + qteNette + " pièces nettes)");
@@ -284,27 +295,27 @@ public class SortiesFxPanel extends FxPanelBase {
             }
         };
 
-        cboProduit.valueProperty().addListener((obs, ov, nv) -> {
+        fc.cboProduit.valueProperty().addListener((obs, ov, nv) -> {
             if (nv != null && nv.getPrixUnitaire() != null) {
-                txtPrix.setText(nv.getPrixUnitaire().toPlainString());
+                fc.txtPrix.setText(nv.getPrixUnitaire().toPlainString());
             }
             recalculer.run();
         });
-        txtPrix.textProperty().addListener((obs, ov, nv) -> recalculer.run());
-        spnSortie.valueProperty().addListener((obs, ov, nv) -> recalculer.run());
-        spnRetour.valueProperty().addListener((obs, ov, nv) -> recalculer.run());
+        fc.txtPrix.textProperty().addListener((obs, ov, nv) -> recalculer.run());
+        fc.spnSortie.valueProperty().addListener((obs, ov, nv) -> recalculer.run());
+        fc.spnRetour.valueProperty().addListener((obs, ov, nv) -> recalculer.run());
 
         if (existante != null) {
             if (existante.getClient() != null) {
-                clients.stream().filter(c -> c.getId().equals(existante.getClient().getId())).findFirst().ifPresent(cboClient::setValue);
+                clients.stream().filter(c -> c.getId().equals(existante.getClient().getId())).findFirst().ifPresent(fc.cboClient::setValue);
             }
             if (existante.getProduit() != null) {
-                produits.stream().filter(p -> p.getId().equals(existante.getProduit().getId())).findFirst().ifPresent(cboProduit::setValue);
+                produits.stream().filter(p -> p.getId().equals(existante.getProduit().getId())).findFirst().ifPresent(fc.cboProduit::setValue);
             }
-            if (existante.getTarifApplicable() != null) txtPrix.setText(existante.getTarifApplicable().toPlainString());
-            spnSortie.getValueFactory().setValue(existante.getQuantiteSortie());
-            spnRetour.getValueFactory().setValue(existante.getQuantiteRetournee());
-            if (existante.getMotifRetour() != null) txtMotif.setText(existante.getMotifRetour());
+            if (existante.getTarifApplicable() != null) fc.txtPrix.setText(existante.getTarifApplicable().toPlainString());
+            fc.spnSortie.getValueFactory().setValue(existante.getQuantiteSortie());
+            fc.spnRetour.getValueFactory().setValue(existante.getQuantiteRetournee());
+            if (existante.getMotifRetour() != null) fc.txtMotif.setText(existante.getMotifRetour());
             recalculer.run();
         }
 
@@ -312,69 +323,82 @@ public class SortiesFxPanel extends FxPanelBase {
         grid.setHgap(10); grid.setVgap(10);
         grid.setPadding(new Insets(16));
 
-        grid.addRow(0, new Label("Client / Livreur : *"), cboClient);
-        grid.addRow(1, new Label("Produit : *"), cboProduit);
-        grid.addRow(2, new Label("Prix unitaire (FCFA) :"), txtPrix);
-        grid.addRow(3, new Label("Quantité sortie :"), new VBox(4, spnSortie, btnRapides));
-        grid.addRow(4, new Label("Quantité retournée :"), spnRetour);
-        grid.addRow(5, new Label("Motif retour :"), txtMotif);
+        grid.addRow(0, new Label("Client / Livreur : *"), fc.cboClient);
+        grid.addRow(1, new Label("Produit : *"), fc.cboProduit);
+        grid.addRow(2, new Label("Prix unitaire (FCFA) :"), fc.txtPrix);
+        grid.addRow(3, new Label("Quantité sortie :"), new VBox(4, fc.spnSortie, btnRapides));
+        grid.addRow(4, new Label("Quantité retournée :"), fc.spnRetour);
+        grid.addRow(5, new Label("Motif retour :"), fc.txtMotif);
         grid.addRow(6, new Label(""), lblCalcul);
 
         dlg.getDialogPane().setContent(grid);
         dlg.setResultConverter(btn -> btn == ButtonType.OK);
 
-        dlg.showAndWait().ifPresent(ok -> {
-            if (!ok) return;
-            Client cl = cboClient.getValue();
-            Produit pr = cboProduit.getValue();
-            if (cl == null || pr == null) {
-                mainWindow.showAlert("Validation", "Veuillez sélectionner un client et un produit.", Alert.AlertType.WARNING);
-                return;
-            }
-            int qSort = spnSortie.getValue();
-            int qRet = spnRetour.getValue();
-            if (qRet > qSort) {
-                mainWindow.showAlert("Validation", "La quantité retournée ne peut pas dépasser la quantité sortie.", Alert.AlertType.WARNING);
-                return;
-            }
+        final FormComponents finalFc = fc;
+        dlg.showAndWait().ifPresent(ok -> handleFormSubmit(ok, existante, finalFc));
+    }
 
-            BigDecimal prix;
-            try {
-                prix = new BigDecimal(txtPrix.getText().trim().replace(" ", "").replace(",", "."));
-            } catch (Exception ex) {
-                prix = pr.getPrixUnitaire() != null ? pr.getPrixUnitaire() : BigDecimal.ZERO;
+    private void handleFormSubmit(boolean ok, LigneSortie existante, FormComponents fc) {
+        if (!ok) return;
+
+        final LigneSortie fExistante = existante;
+        final ComboBox<Client> fCboClient = fc.cboClient;
+        final ComboBox<Produit> fCboProduit = fc.cboProduit;
+        final Spinner<Integer> fSpnSortie = fc.spnSortie;
+        final Spinner<Integer> fSpnRetour = fc.spnRetour;
+        final TextField fTxtPrix = fc.txtPrix;
+        final TextField fTxtMotif = fc.txtMotif;
+        
+        final Client cl = fCboClient.getValue();
+        final Produit pr = fCboProduit.getValue();
+        if (cl == null || pr == null) {
+            mainWindow.showAlert("Validation", "Veuillez sélectionner un client et un produit.", Alert.AlertType.WARNING);
+            return;
+        }
+        final int qSort = fSpnSortie.getValue();
+        final int qRet = fSpnRetour.getValue();
+        if (qRet > qSort) {
+            mainWindow.showAlert("Validation", "La quantité retournée ne peut pas dépasser la quantité sortie.", Alert.AlertType.WARNING);
+            return;
+        }
+
+        BigDecimal tempPrix;
+        try {
+            tempPrix = new BigDecimal(fTxtPrix.getText().trim().replace(" ", "").replace(",", "."));
+        } catch (Exception ex) {
+            tempPrix = pr.getPrixUnitaire() != null ? pr.getPrixUnitaire() : BigDecimal.ZERO;
+        }
+        final BigDecimal prix = tempPrix;
+
+        final LocalDate dateFiche = dpDate.getValue() != null ? dpDate.getValue() : LocalDate.now();
+
+        runAsync(() -> {
+            FicheJournaliere fj = ficheDAO.getOrCreateFicheJour(dateFiche, null, session.getUserId());
+            if (fExistante == null) {
+                LigneSortie l = new LigneSortie();
+                l.setFicheId(fj.getId());
+                l.setClient(cl);
+                l.setProduit(pr);
+                l.setQuantiteSortie(qSort);
+                l.setQuantiteRetournee(qRet);
+                l.setTarifApplicable(prix);
+                l.setTypeTarif("Standard");
+                l.setMotifRetour(fTxtMotif.getText().trim());
+                l.setRemisePct(BigDecimal.ZERO);
+                ficheDAO.saveLigne(l);
+            } else {
+                fExistante.setClient(cl);
+                fExistante.setProduit(pr);
+                fExistante.setQuantiteSortie(qSort);
+                fExistante.setQuantiteRetournee(qRet);
+                fExistante.setTarifApplicable(prix);
+                fExistante.setMotifRetour(fTxtMotif.getText().trim());
+                ficheDAO.updateLigne(fExistante);
             }
-
-            LocalDate dateFiche = dpDate.getValue() != null ? dpDate.getValue() : LocalDate.now();
-
-            runAsync(() -> {
-                FicheJournaliere fj = ficheDAO.getOrCreateFicheJour(dateFiche, null, session.getUserId());
-                if (existante == null) {
-                    LigneSortie l = new LigneSortie();
-                    l.setFicheId(fj.getId());
-                    l.setClient(cl);
-                    l.setProduit(pr);
-                    l.setQuantiteSortie(qSort);
-                    l.setQuantiteRetournee(qRet);
-                    l.setTarifApplicable(prix);
-                    l.setTypeTarif("Standard");
-                    l.setMotifRetour(txtMotif.getText().trim());
-                    l.setRemisePct(BigDecimal.ZERO);
-                    ficheDAO.saveLigne(l);
-                } else {
-                    existante.setClient(cl);
-                    existante.setProduit(pr);
-                    existante.setQuantiteSortie(qSort);
-                    existante.setQuantiteRetournee(qRet);
-                    existante.setTarifApplicable(prix);
-                    existante.setMotifRetour(txtMotif.getText().trim());
-                    ficheDAO.updateLigne(existante);
-                }
-                ficheDAO.recalculerTotauxFiche(fj.getId());
-                return true;
-            }, success -> {
-                refresh();
-            });
+            ficheDAO.recalculerTotauxFiche(fj.getId());
+            return true;
+        }, success -> {
+            refresh();
         });
     }
 
