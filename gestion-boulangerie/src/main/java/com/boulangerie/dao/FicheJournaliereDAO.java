@@ -19,18 +19,11 @@ public class FicheJournaliereDAO {
 
     // ── Générer numéro séquentiel ────────────────────────────────
     public String genererNumero(LocalDate date) {
-        String prefix = "FJ-" + date.getYear() + "-";
-        String sql = "SELECT COUNT(*) FROM fiche_journaliere WHERE numero LIKE ?";
-        try (Connection c = db.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, prefix + "%");
-            ResultSet rs = ps.executeQuery();
-            int count = rs.next() ? rs.getInt(1) : 0;
-            return prefix + String.format("%04d", count + 1);
-        } catch (SQLException e) {
-            log.error("genererNumero", e);
-            return prefix + System.currentTimeMillis();
-        }
+        // Format: sortie jjmmaa
+        String dd = String.format("%02d", date.getDayOfMonth());
+        String mm = String.format("%02d", date.getMonthValue());
+        String yy = String.valueOf(date.getYear()).substring(2);
+        return "sortie " + dd + mm + yy;
     }
 
     // ── Lister par date ──────────────────────────────────────────
@@ -47,8 +40,8 @@ public class FicheJournaliereDAO {
             WHERE 1=1
             """);
         List<Object> params = new ArrayList<>();
-        if (du != null) { sql.append(" AND fj.date_fiche >= ?"); params.add(java.sql.Date.valueOf(du)); }
-        if (au != null) { sql.append(" AND fj.date_fiche <= ?"); params.add(java.sql.Date.valueOf(au)); }
+        if (du != null) { sql.append(" AND fj.date_fiche >= ?"); params.add(Date.valueOf(du)); }
+        if (au != null) { sql.append(" AND fj.date_fiche <= ?"); params.add(Date.valueOf(au)); }
         if (livreurId != null) { sql.append(" AND fj.livreur_id=?"); params.add(livreurId); }
         if (statut != null)    { sql.append(" AND fj.statut=?"); params.add(statut); }
         sql.append(" ORDER BY fj.date_fiche DESC, fj.numero");
@@ -94,12 +87,14 @@ public class FicheJournaliereDAO {
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, fj.getNumero());
-            ps.setDate(2, java.sql.Date.valueOf(fj.getDateFiche()));
-            ps.setString(3, fj.getLivreur().getId());
-            ps.setString(4, fj.getStatut().name());
+            ps.setDate(2, Date.valueOf(fj.getDateFiche()));
+            ps.setString(3, fj.getLivreur() != null ? fj.getLivreur().getId() : null);
+            ps.setString(4, toDbStatut(fj.getStatut()));
             ps.setString(5, fj.getCreePar());
             ps.executeUpdate();
-            return findIdByNumero(fj.getNumero(), c);
+            String id = findIdByNumero(fj.getNumero(), c);
+            if (id != null) fj.setId(id);
+            return id;
         } catch (SQLException e) {
             log.error("save fiche", e);
             throw new RuntimeException(e);
@@ -110,7 +105,7 @@ public class FicheJournaliereDAO {
         String sql = "UPDATE fiche_journaliere SET statut=? WHERE id=?";
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, statut.name());
+            ps.setString(1, toDbStatut(statut));
             ps.setString(2, ficheId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -138,21 +133,24 @@ public class FicheJournaliereDAO {
     public String saveLigne(LigneCommande l) {
         String sql = """
             INSERT INTO ligne_commande (id,fiche_id,client_id,produit_id,quantite_sortie,
-            quantite_retournee,tarif_applicable,type_tarif,remise_pct,montant_ht,motif_retour)
-            VALUES (UUID(),?,?,?,?,?,?,?,?,?,?)
+            quantite_retournee,prix_unitaire,tarif_applicable,type_tarif,remise_pct,montant_ht,motif_retour)
+            VALUES (UUID(),?,?,?,?,?,?,?,?,?,?,?)
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, l.getFicheId());
-            ps.setString(2, l.getClient().getId());
-            ps.setString(3, l.getProduit().getId());
+            ps.setString(2, l.getClient() != null ? l.getClient().getId() : null);
+            ps.setString(3, l.getProduit() != null ? l.getProduit().getId() : null);
             ps.setInt(4, l.getQuantiteSortie());
             ps.setInt(5, l.getQuantiteRetournee());
-            ps.setBigDecimal(6, l.getTarifApplicable());
-            ps.setString(7, l.getTypeTarif());
-            ps.setBigDecimal(8, l.getRemisePct());
-            ps.setBigDecimal(9, l.getMontantHt());
-            ps.setString(10, l.getMotifRetour());
+            BigDecimal pu = l.getTarifApplicable() != null ? l.getTarifApplicable() : l.getPrixUnitaire();
+            if (pu == null) pu = BigDecimal.ZERO;
+            ps.setBigDecimal(6, pu);
+            ps.setBigDecimal(7, pu);
+            ps.setString(8, l.getTypeTarif() != null ? l.getTypeTarif() : "Standard");
+            ps.setBigDecimal(9, l.getRemisePct() != null ? l.getRemisePct() : BigDecimal.ZERO);
+            ps.setBigDecimal(10, l.getMontantHt() != null ? l.getMontantHt() : BigDecimal.ZERO);
+            ps.setString(11, l.getMotifRetour());
             ps.executeUpdate();
             return null;
         } catch (SQLException e) {
@@ -164,17 +162,20 @@ public class FicheJournaliereDAO {
     public void updateLigne(LigneCommande l) {
         String sql = """
             UPDATE ligne_commande SET quantite_sortie=?,quantite_retournee=?,
-            tarif_applicable=?,remise_pct=?,montant_ht=?,motif_retour=? WHERE id=?
+            prix_unitaire=?,tarif_applicable=?,remise_pct=?,montant_ht=?,motif_retour=? WHERE id=?
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setInt(1, l.getQuantiteSortie());
             ps.setInt(2, l.getQuantiteRetournee());
-            ps.setBigDecimal(3, l.getTarifApplicable());
-            ps.setBigDecimal(4, l.getRemisePct());
-            ps.setBigDecimal(5, l.getMontantHt());
-            ps.setString(6, l.getMotifRetour());
-            ps.setString(7, l.getId());
+            BigDecimal pu = l.getTarifApplicable() != null ? l.getTarifApplicable() : l.getPrixUnitaire();
+            if (pu == null) pu = BigDecimal.ZERO;
+            ps.setBigDecimal(3, pu);
+            ps.setBigDecimal(4, pu);
+            ps.setBigDecimal(5, l.getRemisePct() != null ? l.getRemisePct() : BigDecimal.ZERO);
+            ps.setBigDecimal(6, l.getMontantHt() != null ? l.getMontantHt() : BigDecimal.ZERO);
+            ps.setString(7, l.getMotifRetour());
+            ps.setString(8, l.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             log.error("updateLigne", e);
@@ -211,7 +212,7 @@ public class FicheJournaliereDAO {
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setDate(1, java.sql.Date.valueOf(date));
+            ps.setDate(1, Date.valueOf(date));
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 LigneCommande l = new LigneCommande();
@@ -219,7 +220,9 @@ public class FicheJournaliereDAO {
                 l.setFicheId(rs.getString("fiche_id"));
                 l.setQuantiteSortie(rs.getInt("quantite_sortie"));
                 l.setQuantiteRetournee(rs.getInt("quantite_retournee"));
-                l.setTarifApplicable(rs.getBigDecimal("tarif_applicable"));
+                BigDecimal tarif = rs.getBigDecimal("tarif_applicable");
+                if (tarif == null) tarif = rs.getBigDecimal("prix_unitaire");
+                l.setTarifApplicable(tarif);
                 l.setTypeTarif(rs.getString("type_tarif"));
                 l.setRemisePct(rs.getBigDecimal("remise_pct"));
                 l.setMontantHt(rs.getBigDecimal("montant_ht"));
@@ -248,21 +251,23 @@ public class FicheJournaliereDAO {
         return list;
     }
 
-    public FicheJournaliere getOrCreateFicheJour(LocalDate date, Utilisateur livreur, String creePar) {
-        String livId = livreur != null ? livreur.getId() : null;
-        List<FicheJournaliere> fiches = findByFilters(date, date, livId, null);
+    public FicheJournaliere getOrCreateFicheJour(LocalDate date, String creePar) {
+        List<FicheJournaliere> fiches = findByFilters(date, date, null, null);
         if (!fiches.isEmpty()) {
             return findById(fiches.get(0).getId()).orElse(fiches.get(0));
         }
         FicheJournaliere f = new FicheJournaliere();
         f.setDateFiche(date);
         f.setNumero(genererNumero(date));
-        if (livreur != null) {
-            f.setLivreur(livreur);
-        } else {
-            List<Utilisateur> livs = new UtilisateurDAO().findLivreurs();
-            f.setLivreur(!livs.isEmpty() ? livs.get(0) : new UtilisateurDAO().findAll().stream().findFirst().orElse(null));
-        }
+        // On ne rattache plus à un livreur spécifique au niveau de la fiche si c'est global
+        // On peut mettre un livreur par défaut ou null si la DB le permet (ici NOT NULL dans le schéma initial)
+        // Vérifions le schéma : livreur_id VARCHAR(36) NOT NULL. 
+        // Si c'est global, on devrait peut-être changer le schéma ou mettre l'admin.
+        
+        // Récupérer un utilisateur par défaut (admin ou le premier venu)
+        Utilisateur defaultUser = new UtilisateurDAO().findAll().stream().findFirst().orElse(null);
+        f.setLivreur(defaultUser);
+        
         f.setStatut(FicheJournaliere.Statut.EnCours);
         f.setCreePar(creePar);
         String id = save(f);
@@ -290,12 +295,101 @@ public class FicheJournaliereDAO {
         }
     }
 
+    public void deleteFiche(String ficheId) {
+        try (Connection c = db.getConnection()) {
+            c.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = c.prepareStatement("DELETE FROM ligne_commande WHERE fiche_id=?")) {
+                    ps.setString(1, ficheId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = c.prepareStatement("DELETE FROM fiche_journaliere WHERE id=?")) {
+                    ps.setString(1, ficheId);
+                    ps.executeUpdate();
+                }
+                c.commit();
+            } catch (SQLException e) {
+                c.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            log.error("deleteFiche {}", ficheId, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<LocalDate> findDatesSortieByClient(String clientId) {
+        List<LocalDate> list = new ArrayList<>();
+        String sql = """
+            SELECT DISTINCT fj.date_fiche
+            FROM ligne_commande lc
+            JOIN fiche_journaliere fj ON lc.fiche_id = fj.id
+            WHERE lc.client_id = ?
+            ORDER BY fj.date_fiche DESC
+            """;
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, clientId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Date d = rs.getDate(1);
+                if (d != null) list.add(d.toLocalDate());
+            }
+        } catch (SQLException e) {
+            log.error("findDatesSortieByClient {}", clientId, e);
+        }
+        return list;
+    }
+
+    public List<LigneCommande> findLignesByClientAndDate(String clientId, LocalDate date) {
+        List<LigneCommande> list = new ArrayList<>();
+        String sql = """
+            SELECT lc.*,
+                   p.id AS p_id, p.code AS p_code, p.libelle AS p_lib, p.prix_unitaire AS p_prix
+            FROM ligne_commande lc
+            JOIN fiche_journaliere fj ON lc.fiche_id = fj.id
+            JOIN produit p ON lc.produit_id = p.id
+            WHERE lc.client_id = ? AND fj.date_fiche = ?
+            ORDER BY p.libelle
+            """;
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, clientId);
+            ps.setDate(2, Date.valueOf(date));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                LigneCommande l = new LigneCommande();
+                l.setId(rs.getString("id"));
+                l.setFicheId(rs.getString("fiche_id"));
+                l.setQuantiteSortie(rs.getInt("quantite_sortie"));
+                l.setQuantiteRetournee(rs.getInt("quantite_retournee"));
+                BigDecimal tarif = rs.getBigDecimal("tarif_applicable");
+                if (tarif == null) tarif = rs.getBigDecimal("prix_unitaire");
+                l.setTarifApplicable(tarif);
+                l.setTypeTarif(rs.getString("type_tarif"));
+                l.setRemisePct(rs.getBigDecimal("remise_pct"));
+                l.setMontantHt(rs.getBigDecimal("montant_ht"));
+                l.setMotifRetour(rs.getString("motif_retour"));
+                Produit p = new Produit();
+                p.setId(rs.getString("p_id"));
+                p.setCode(rs.getString("p_code"));
+                p.setLibelle(rs.getString("p_lib"));
+                p.setPrixUnitaire(rs.getBigDecimal("p_prix"));
+                l.setProduit(p);
+                list.add(l);
+            }
+        } catch (SQLException e) {
+            log.error("findLignesByClientAndDate {} {}", clientId, date, e);
+        }
+        return list;
+    }
+
     // ── Statistiques dashboard ───────────────────────────────────
     public BigDecimal getSortiesNettesJour(LocalDate date) {
         String sql = "SELECT COALESCE(SUM(total_net),0) FROM fiche_journaliere WHERE date_fiche=?";
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setDate(1, java.sql.Date.valueOf(date));
+            ps.setDate(1, Date.valueOf(date));
             ResultSet rs = ps.executeQuery();
             return rs.next() ? rs.getBigDecimal(1) : BigDecimal.ZERO;
         } catch (SQLException e) {
@@ -325,7 +419,9 @@ public class FicheJournaliereDAO {
                 l.setFicheId(ficheId);
                 l.setQuantiteSortie(rs.getInt("quantite_sortie"));
                 l.setQuantiteRetournee(rs.getInt("quantite_retournee"));
-                l.setTarifApplicable(rs.getBigDecimal("tarif_applicable"));
+                BigDecimal tarif = rs.getBigDecimal("tarif_applicable");
+                if (tarif == null) tarif = rs.getBigDecimal("prix_unitaire");
+                l.setTarifApplicable(tarif);
                 l.setTypeTarif(rs.getString("type_tarif"));
                 l.setRemisePct(rs.getBigDecimal("remise_pct"));
                 l.setMontantHt(rs.getBigDecimal("montant_ht"));
@@ -356,17 +452,41 @@ public class FicheJournaliereDAO {
         fj.setNumero(rs.getString("numero"));
         Date df = rs.getDate("date_fiche");
         if (df != null) fj.setDateFiche(df.toLocalDate());
-        fj.setStatut(FicheJournaliere.Statut.valueOf(rs.getString("statut").replace(" ","").replace("é","é")));
+        fj.setStatut(fromDbStatut(rs.getString("statut")));
         fj.setTotalSorties(rs.getBigDecimal("total_sorties"));
         fj.setTotalRetours(rs.getBigDecimal("total_retours"));
         fj.setTotalNet(rs.getBigDecimal("total_net"));
         fj.setCreePar(rs.getString("cree_par"));
         Timestamp dc = rs.getTimestamp("date_creation");
         if (dc != null) fj.setDateCreation(dc.toLocalDateTime());
-        Utilisateur liv = new Utilisateur();
-        liv.setId(rs.getString("liv_id"));
-        liv.setNomComplet(rs.getString("liv_nom"));
-        fj.setLivreur(liv);
+        String livId = rs.getString("liv_id");
+        if (livId != null) {
+            Utilisateur liv = new Utilisateur();
+            liv.setId(livId);
+            liv.setNomComplet(rs.getString("liv_nom"));
+            fj.setLivreur(liv);
+        }
         return fj;
+    }
+
+    private static String toDbStatut(FicheJournaliere.Statut statut) {
+        if (statut == null) return "Brouillon";
+        if (statut == FicheJournaliere.Statut.EnCours) return "En cours";
+        return statut.name();
+    }
+
+    private static FicheJournaliere.Statut fromDbStatut(String s) {
+        if (s == null || s.isBlank()) return FicheJournaliere.Statut.Brouillon;
+        // Normaliser : retirer espaces et passer en minuscule pour comparaison fiable
+        String norm = s.replace(" ", "").toLowerCase();
+        if (norm.equals("encours"))   return FicheJournaliere.Statut.EnCours;
+        if (norm.equals("brouillon")) return FicheJournaliere.Statut.Brouillon;
+        if (norm.startsWith("compl")) return FicheJournaliere.Statut.Complétée;
+        if (norm.startsWith("cl"))    return FicheJournaliere.Statut.Clôturée;
+        try { return FicheJournaliere.Statut.valueOf(s); }
+        catch (Exception e) {
+            log.warn("Statut inconnu '{}', fallback Brouillon", s);
+            return FicheJournaliere.Statut.Brouillon;
+        }
     }
 }

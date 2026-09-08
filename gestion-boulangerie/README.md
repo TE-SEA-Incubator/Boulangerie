@@ -156,7 +156,7 @@ src/main/java/com/boulangerie/
 | **Dashboard** | KPIs temps réel : CA jour, sorties nettes, créances, clients bloqués, écarts caisse |
 | **Produits & Tarifs** | Catalogue produits, familles, tarifs multi-niveaux, remises exceptionnelles |
 | **Clients** | Fiche client, catégories (Externe/Interne/Carrefour), nominatif/anonyme, soldes |
-| **Sorties/Retours** | Fiches journalières par livreur, saisie lignes, validation, finalisation |
+| **Sorties/Retours** | Fiches journalières consolidées pour tous les clients, saisie lignes, validation, finalisation |
 | **Facturation** | Génération auto depuis sorties nettes, factures verrouillées, avoirs traçables |
 | **Caisse** | Versements, rapprochement attendu/remis, reçus électroniques, motif écart obligatoire |
 | **Recouvrement** | Rapprochement de caisse, taux de recouvrement, validation clôture |

@@ -1,5 +1,6 @@
 package com.boulangerie.ui.fx;
 
+import com.boulangerie.model.Client;
 import com.boulangerie.model.FicheCaisseLigne;
 import com.boulangerie.model.Recu;
 import com.boulangerie.model.Versement;
@@ -92,6 +93,14 @@ public class CaisseFxPanel extends FxPanelBase {
         // Table Caisse
         table = styledTable();
         table.setItems(data);
+        table.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                FicheCaisseLigne sel = table.getSelectionModel().getSelectedItem();
+                if (sel != null && sel.getClient() != null) {
+                    ouvrirDetailClient(sel.getClient());
+                }
+            }
+        });
 
         TableColumn<FicheCaisseLigne, String> colClient = new TableColumn<>("Nom Livreur / Client");
         TableColumn<FicheCaisseLigne, String> colSorties = new TableColumn<>("Sorties (Pains & Produits)");
@@ -165,22 +174,28 @@ public class CaisseFxPanel extends FxPanelBase {
         colStatut.setPrefWidth(110);
 
         colActions.setCellFactory(col -> new TableCell<>() {
+            private final Button btnDetail = new Button("📋 Dates Sorties");
             private final Button btnEncaisser = new Button("💵 Encaisser");
             private final Button btnRecu = new Button("🧾");
-            private final HBox box = new HBox(6, btnEncaisser, btnRecu);
+            private final HBox box = new HBox(4, btnDetail, btnEncaisser, btnRecu);
 
             {
-                btnEncaisser.setStyle("-fx-font-size: 11px; -fx-padding: 3 8; -fx-background-color: #EDF7EE; -fx-text-fill: #2E7D32; -fx-font-weight: bold; -fx-cursor: hand;");
-                btnRecu.setStyle("-fx-font-size: 11px; -fx-padding: 3 8; -fx-background-color: #F4F0E8; -fx-text-fill: #1A2733; -fx-cursor: hand;");
+                btnDetail.setStyle("-fx-font-size: 11px; -fx-padding: 3 6; -fx-background-color: #E8F0FE; -fx-text-fill: #1A73E8; -fx-font-weight: bold; -fx-cursor: hand;");
+                btnEncaisser.setStyle("-fx-font-size: 11px; -fx-padding: 3 6; -fx-background-color: #EDF7EE; -fx-text-fill: #2E7D32; -fx-font-weight: bold; -fx-cursor: hand;");
+                btnRecu.setStyle("-fx-font-size: 11px; -fx-padding: 3 6; -fx-background-color: #F4F0E8; -fx-text-fill: #1A2733; -fx-cursor: hand;");
                 box.setAlignment(Pos.CENTER);
 
+                btnDetail.setOnAction(e -> {
+                    FicheCaisseLigne l = getTableView().getItems().get(getIndex());
+                    if (l != null && l.getClient() != null) ouvrirDetailClient(l.getClient());
+                });
                 btnEncaisser.setOnAction(e -> {
                     FicheCaisseLigne l = getTableView().getItems().get(getIndex());
-                    ouvrirDialogueEncaissement(l);
+                    if (l != null) ouvrirDialogueEncaissement(l);
                 });
                 btnRecu.setOnAction(e -> {
                     FicheCaisseLigne l = getTableView().getItems().get(getIndex());
-                    afficherRecu(l);
+                    if (l != null) afficherRecu(l);
                 });
             }
 
@@ -190,7 +205,7 @@ public class CaisseFxPanel extends FxPanelBase {
                 setGraphic(empty ? null : box);
             }
         });
-        colActions.setPrefWidth(140);
+        colActions.setPrefWidth(220);
 
         table.getColumns().addAll(colClient, colSorties, colFacture, colEcartPrec, colTotalSolde, colVersement, colReste, colStatut, colActions);
 
@@ -445,5 +460,11 @@ public class CaisseFxPanel extends FxPanelBase {
             ExcelExportService.exporterFicheCaisseExcel(date, allLignes, f);
             return true;
         }, ok -> mainWindow.showAlert("Succès", "Feuille Excel exportée avec succès :\n" + f.getName(), Alert.AlertType.INFORMATION));
+    }
+
+    private void ouvrirDetailClient(Client client) {
+        ClientDetailCaisseDialog dlg = new ClientDetailCaisseDialog(client);
+        dlg.showAndWait();
+        refresh();
     }
 }

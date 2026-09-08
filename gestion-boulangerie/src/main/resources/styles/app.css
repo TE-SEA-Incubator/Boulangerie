@@ -414,3 +414,61 @@
     -fx-font-size: 14px;
     -fx-font-weight: bold;
 }
+
+/* ════════════════════════════════════════════════════════════
+   MATRICE JOURNALIÈRE — GRILLE EXCEL AVEC BORDURES NOIRES
+   ════════════════════════════════════════════════════════════ */
+.matrice-excel-table {
+    -fx-background-color: white;
+    -fx-border-color: #000000;
+    -fx-border-width: 1.5px;
+    -fx-table-cell-border-color: #000000;
+}
+.matrice-excel-table .column-header-background {
+    -fx-background-color: white;
+    -fx-border-color: #000000;
+    -fx-border-width: 0 0 1.5px 0;
+}
+.matrice-excel-table .column-header,
+.matrice-excel-table .nested-column-header {
+    -fx-background-color: white;
+    -fx-border-color: #000000;
+    -fx-border-width: 0.5px;
+    -fx-alignment: CENTER;
+}
+.matrice-excel-table .column-header .label,
+.matrice-excel-table .nested-column-header .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #000000;
+    -fx-font-size: 11px;
+    -fx-alignment: CENTER;
+    -fx-text-alignment: CENTER;
+}
+.matrice-excel-table .table-cell {
+    -fx-border-color: #000000;
+    -fx-border-width: 0.5px;
+    -fx-padding: 2 4;
+    -fx-font-size: 12px;
+}
+.matrice-excel-table .table-row-cell:filled {
+    -fx-background-color: white;
+}
+.matrice-excel-table .table-row-cell:filled:selected {
+    -fx-background-color: #E8F0FE;
+}
+.matrice-excel-table .table-row-cell:hover {
+    -fx-background-color: #F8F9FA;
+}
+.matrice-cell-input {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 2;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+.matrice-cell-input:focused {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #1A73E8;
+    -fx-border-width: 1.5px;
+}
+

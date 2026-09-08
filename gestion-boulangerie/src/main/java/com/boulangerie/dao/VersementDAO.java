@@ -49,12 +49,12 @@ public class VersementDAO {
         List<Versement> list = new ArrayList<>();
         String sql = """
             SELECT v.*,
-                   f.numero AS fac_num,
+                   fj.numero AS fj_num,
                    cl.id AS cl_id, cl.nom AS cl_nom,
                    u.id AS liv_id, u.nom_complet AS liv_nom,
                    ca.id AS ca_id, ca.nom_complet AS ca_nom
             FROM versement v
-            LEFT JOIN facture f ON v.facture_id = f.id
+            LEFT JOIN fiche_journaliere fj ON v.fiche_id = fj.id
             LEFT JOIN client cl ON v.client_id = cl.id
             LEFT JOIN utilisateur u ON v.livreur_id = u.id
             LEFT JOIN utilisateur ca ON v.caissier_id = ca.id
@@ -63,7 +63,7 @@ public class VersementDAO {
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setDate(1, java.sql.Date.valueOf(date));
+            ps.setDate(1, Date.valueOf(date));
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) {
@@ -72,53 +72,107 @@ public class VersementDAO {
         return list;
     }
 
-    public List<Versement> findByFacture(String factureId) {
+    public List<Versement> findByFiche(String ficheId) {
         List<Versement> list = new ArrayList<>();
         String sql = """
             SELECT v.*,
-                   f.numero AS fac_num,
+                   fj.numero AS fj_num,
                    cl.id AS cl_id, cl.nom AS cl_nom,
                    u.id AS liv_id, u.nom_complet AS liv_nom,
                    ca.id AS ca_id, ca.nom_complet AS ca_nom
             FROM versement v
-            LEFT JOIN facture f ON v.facture_id = f.id
+            LEFT JOIN fiche_journaliere fj ON v.fiche_id = fj.id
             LEFT JOIN client cl ON v.client_id = cl.id
             LEFT JOIN utilisateur u ON v.livreur_id = u.id
             LEFT JOIN utilisateur ca ON v.caissier_id = ca.id
-            WHERE v.facture_id=?
+            WHERE v.fiche_id=?
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, factureId);
+            ps.setString(1, ficheId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapRow(rs));
         } catch (SQLException e) {
-            log.error("findByFacture {}", factureId, e);
+            log.error("findByFiche {}", ficheId, e);
+        }
+        return list;
+    }
+
+    public List<Versement> findByClient(String clientId) {
+        List<Versement> list = new ArrayList<>();
+        String sql = """
+            SELECT v.*,
+                   fj.numero AS fj_num,
+                   cl.id AS cl_id, cl.nom AS cl_nom,
+                   u.id AS liv_id, u.nom_complet AS liv_nom,
+                   ca.id AS ca_id, ca.nom_complet AS ca_nom
+            FROM versement v
+            LEFT JOIN fiche_journaliere fj ON v.fiche_id = fj.id
+            LEFT JOIN client cl ON v.client_id = cl.id
+            LEFT JOIN utilisateur u ON v.livreur_id = u.id
+            LEFT JOIN utilisateur ca ON v.caissier_id = ca.id
+            WHERE v.client_id=?
+            ORDER BY v.date_versement DESC
+            """;
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, clientId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapRow(rs));
+        } catch (SQLException e) {
+            log.error("findByClient {}", clientId, e);
+        }
+        return list;
+    }
+
+    public List<Versement> findByClientAndDate(String clientId, LocalDate date) {
+        List<Versement> list = new ArrayList<>();
+        String sql = """
+            SELECT v.*,
+                   fj.numero AS fj_num,
+                   cl.id AS cl_id, cl.nom AS cl_nom,
+                   u.id AS liv_id, u.nom_complet AS liv_nom,
+                   ca.id AS ca_id, ca.nom_complet AS ca_nom
+            FROM versement v
+            LEFT JOIN fiche_journaliere fj ON v.fiche_id = fj.id
+            LEFT JOIN client cl ON v.client_id = cl.id
+            LEFT JOIN utilisateur u ON v.livreur_id = u.id
+            LEFT JOIN utilisateur ca ON v.caissier_id = ca.id
+            WHERE v.client_id=? AND v.date_versement=?
+            ORDER BY v.date_creation
+            """;
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, clientId);
+            ps.setDate(2, Date.valueOf(date));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) list.add(mapRow(rs));
+        } catch (SQLException e) {
+            log.error("findByClientAndDate {} {}", clientId, date, e);
         }
         return list;
     }
 
     public String save(Versement v) {
         String sql = """
-            INSERT INTO versement (id,numero,facture_id,livreur_id,client_id,
-            montant_attendu,montant_remis,montant_enregistre,mode_paiement,
+            INSERT INTO versement (id,numero,fiche_id,livreur_id,client_id,
+            montant_attendu,montant_remis,mode_paiement,
             motif_ecart,date_versement,statut,caissier_id)
-            VALUES (UUID(),?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (UUID(),?,?,?,?,?,?,?,?,?,?,?)
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, v.getNumero());
-            ps.setString(2, v.getFacture() != null ? v.getFacture().getId() : null);
+            ps.setString(2, v.getFiche() != null ? v.getFiche().getId() : null);
             ps.setString(3, v.getLivreur() != null ? v.getLivreur().getId() : null);
             ps.setString(4, v.getClient() != null ? v.getClient().getId() : null);
             ps.setBigDecimal(5, v.getMontantAttendu());
             ps.setBigDecimal(6, v.getMontantRemis());
-            ps.setBigDecimal(7, v.getMontantEnregistre());
-            ps.setString(8, v.getModePaiement());
-            ps.setString(9, v.getMotifEcart());
-            ps.setDate(10, java.sql.Date.valueOf(v.getDateVersement()));
-            ps.setString(11, v.getStatut().name());
-            ps.setString(12, v.getCaissier() != null ? v.getCaissier().getId() : null);
+            ps.setString(7, v.getModePaiement());
+            ps.setString(8, v.getMotifEcart());
+            ps.setDate(9, Date.valueOf(v.getDateVersement()));
+            ps.setString(10, v.getStatut().name());
+            ps.setString(11, v.getCaissier() != null ? v.getCaissier().getId() : null);
             ps.executeUpdate();
             return findIdByNumero(v.getNumero(), c);
         } catch (SQLException e) {
@@ -150,18 +204,20 @@ public class VersementDAO {
         return getSomme("SELECT COALESCE(SUM(montant_remis),0) FROM versement WHERE date_versement=?", date);
     }
 
+    /** Pour compatibilité avec les services utilisant montantEnregistre */
     public BigDecimal getMontantEnregistreJour(LocalDate date) {
-        return getSomme("SELECT COALESCE(SUM(montant_enregistre),0) FROM versement WHERE date_versement=?", date);
+        return getMontantRemisJour(date);
     }
 
     public BigDecimal getEcartsCaisseJour(LocalDate date) {
-        return getSomme("SELECT COALESCE(SUM(montant_remis - montant_enregistre),0) FROM versement WHERE date_versement=?", date);
+        // Dans le schéma actuel ecart est montant_remis - montant_attendu
+        return getSomme("SELECT COALESCE(SUM(ecart),0) FROM versement WHERE date_versement=?", date);
     }
 
     private BigDecimal getSomme(String sql, LocalDate date) {
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setDate(1, java.sql.Date.valueOf(date));
+            ps.setDate(1, Date.valueOf(date));
             ResultSet rs = ps.executeQuery();
             return rs.next() ? rs.getBigDecimal(1) : BigDecimal.ZERO;
         } catch (SQLException e) {
@@ -174,25 +230,23 @@ public class VersementDAO {
     public void saveClotureJournaliere(ClotureJournaliere cl) {
         String sql = """
             INSERT INTO cloture_journaliere (id,date_cloture,montant_attendu,montant_remis,
-            montant_enregistre,ecart_total,motif_ecart,taux_recouvrement,solde_cloture,valide_par,date_validation)
-            VALUES (UUID(),?,?,?,?,?,?,?,?,?,NOW())
+            ecart_total,motif_ecart,taux_recouvrement,valide_par,date_validation)
+            VALUES (UUID(),?,?,?,?,?,?,?,NOW())
             ON DUPLICATE KEY UPDATE
             montant_attendu=VALUES(montant_attendu),montant_remis=VALUES(montant_remis),
-            montant_enregistre=VALUES(montant_enregistre),ecart_total=VALUES(ecart_total),
+            ecart_total=VALUES(ecart_total),
             motif_ecart=VALUES(motif_ecart),taux_recouvrement=VALUES(taux_recouvrement),
-            solde_cloture=VALUES(solde_cloture),valide_par=VALUES(valide_par),date_validation=NOW()
+            valide_par=VALUES(valide_par),date_validation=NOW()
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setDate(1, java.sql.Date.valueOf(cl.getDateCloture()));
+            ps.setDate(1, Date.valueOf(cl.getDateCloture()));
             ps.setBigDecimal(2, cl.getMontantAttendu());
             ps.setBigDecimal(3, cl.getMontantRemis());
-            ps.setBigDecimal(4, cl.getMontantEnregistre());
-            ps.setBigDecimal(5, cl.getEcartTotal());
-            ps.setString(6, cl.getMotifEcart());
-            ps.setBigDecimal(7, cl.getTauxRecouvrement());
-            ps.setBigDecimal(8, cl.getSoldeCloture());
-            ps.setString(9, cl.getValideParId());
+            ps.setBigDecimal(4, cl.getEcartTotal());
+            ps.setString(5, cl.getMotifEcart());
+            ps.setBigDecimal(6, cl.getTauxRecouvrement());
+            ps.setString(7, cl.getValideParId());
             ps.executeUpdate();
         } catch (SQLException e) {
             log.error("saveClotureJournaliere", e);
@@ -215,7 +269,8 @@ public class VersementDAO {
         v.setNumero(rs.getString("numero"));
         v.setMontantAttendu(rs.getBigDecimal("montant_attendu"));
         v.setMontantRemis(rs.getBigDecimal("montant_remis"));
-        v.setMontantEnregistre(rs.getBigDecimal("montant_enregistre"));
+        // On mappe montant_remis sur montantEnregistre pour la compatibilité
+        v.setMontantEnregistre(rs.getBigDecimal("montant_remis"));
         v.setModePaiement(rs.getString("mode_paiement"));
         v.setMotifEcart(rs.getString("motif_ecart"));
         Date dv = rs.getDate("date_versement");
@@ -227,11 +282,13 @@ public class VersementDAO {
         }
         Timestamp dc = rs.getTimestamp("date_creation");
         if (dc != null) v.setDateCreation(dc.toLocalDateTime());
-        // Facture légère
-        String facNum = rs.getString("fac_num");
-        if (facNum != null) {
-            Facture f = new Facture(); f.setId(rs.getString("facture_id")); f.setNumero(facNum);
-            v.setFacture(f);
+        // Fiche Journalière légère
+        String fjId = rs.getString("fiche_id");
+        if (fjId != null) {
+            FicheJournaliere fj = new FicheJournaliere(); 
+            fj.setId(fjId); 
+            fj.setNumero(rs.getString("fj_num"));
+            v.setFiche(fj);
         }
         // Client
         String clId = rs.getString("cl_id");
@@ -252,5 +309,60 @@ public class VersementDAO {
             v.setCaissier(ca);
         }
         return v;
+    }
+
+    public Map<String, BigDecimal> findTotalVersementsByDate(LocalDate date) {
+        Map<String, BigDecimal> map = new java.util.HashMap<>();
+        String sql = "SELECT client_id, SUM(montant_remis) FROM versement WHERE date_versement=? AND client_id IS NOT NULL GROUP BY client_id";
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(date));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getString(1), rs.getBigDecimal(2));
+            }
+        } catch (SQLException e) {
+            log.error("findTotalVersementsByDate {}", date, e);
+        }
+        return map;
+    }
+
+    public void enregistrerOuMettreAJourVersement(String ficheId, String clientId, LocalDate date, BigDecimal montant, String caissierId) {
+        List<Versement> existants = findByClientAndDate(clientId, date);
+        if (!existants.isEmpty()) {
+            Versement v = existants.get(0);
+            String sql = "UPDATE versement SET montant_remis=?, montant_attendu=?, statut='Payé' WHERE id=?";
+            try (Connection c = db.getConnection();
+                 PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setBigDecimal(1, montant);
+                ps.setBigDecimal(2, montant);
+                ps.setString(3, v.getId());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                log.error("update versement", e);
+            }
+        } else {
+            Versement v = new Versement();
+            v.setNumero(genererNumero());
+            if (ficheId != null) {
+                FicheJournaliere f = new FicheJournaliere();
+                f.setId(ficheId);
+                v.setFiche(f);
+            }
+            Client cl = new Client();
+            cl.setId(clientId);
+            v.setClient(cl);
+            v.setMontantAttendu(montant);
+            v.setMontantRemis(montant);
+            v.setModePaiement("Espèces");
+            v.setDateVersement(date);
+            v.setStatut(Versement.Statut.Payé);
+            if (caissierId != null) {
+                Utilisateur u = new Utilisateur();
+                u.setId(caissierId);
+                v.setCaissier(u);
+            }
+            save(v);
+        }
     }
 }

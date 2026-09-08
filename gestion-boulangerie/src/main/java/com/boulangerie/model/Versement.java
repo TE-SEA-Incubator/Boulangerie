@@ -9,12 +9,12 @@ public class Versement {
 
     private String id;
     private String numero;
-    private Facture facture;
+    private FicheJournaliere fiche;
     private Utilisateur livreur;
     private Client client;
     private BigDecimal montantAttendu;
     private BigDecimal montantRemis;
-    private BigDecimal montantEnregistre;
+    private BigDecimal montantEnregistre; // Sera mappé sur montant_remis en DB si nécessaire ou utilisé pour les écarts
     private String modePaiement;
     private String motifEcart;
     private LocalDate dateVersement;
@@ -33,8 +33,8 @@ public class Versement {
     public void setId(String id) { this.id = id; }
     public String getNumero() { return numero; }
     public void setNumero(String numero) { this.numero = numero; }
-    public Facture getFacture() { return facture; }
-    public void setFacture(Facture facture) { this.facture = facture; }
+    public FicheJournaliere getFiche() { return fiche; }
+    public void setFiche(FicheJournaliere fiche) { this.fiche = fiche; }
     public Utilisateur getLivreur() { return livreur; }
     public void setLivreur(Utilisateur livreur) { this.livreur = livreur; }
     public Client getClient() { return client; }
@@ -61,6 +61,10 @@ public class Versement {
     public BigDecimal getEcart() {
         return montantRemis.subtract(montantEnregistre);
     }
+
+    // Compatibilité temporaire si Facture est encore référencé ailleurs
+    public Facture getFacture() { return null; }
+    public void setFacture(Facture facture) { /* no-op */ }
 
     @Override public String toString() { return numero; }
 }

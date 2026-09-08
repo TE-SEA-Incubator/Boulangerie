@@ -11,26 +11,17 @@ import java.util.List;
 
 /**
  * Service de clôture journalière et mensuelle.
- *
- * Règle fondamentale du CDC :
- *   Solde clôture J = Solde ouverture J+1  pour chaque client nominatif.
  */
 public class ClotureService {
     private static final Logger log = LoggerFactory.getLogger(ClotureService.class);
 
     private final ClientDAO      clientDAO      = new ClientDAO();
     private final SoldeClientDAO soldeDAO       = new SoldeClientDAO();
-    private final FactureDAO     factureDAO     = new FactureDAO();
+    private final FicheJournaliereDAO ficheDAO  = new FicheJournaliereDAO();
     private final VersementDAO   versementDAO   = new VersementDAO();
     private final AuditDAO       auditDAO       = new AuditDAO();
     private final SessionService session        = SessionService.getInstance();
 
-    /**
-     * Clôture journalière complète :
-     * 1. Calcule et enregistre le solde de chaque client nominatif.
-     * 2. Reporte le solde de clôture J en solde d'ouverture J+1.
-     * 3. Journalise la clôture.
-     */
     public void cloturerJour(LocalDate date) {
         List<Client> clients = clientDAO.findAll();
         int nbTraites = 0;
@@ -38,12 +29,11 @@ public class ClotureService {
         for (Client client : clients) {
             if (!client.isNominatif()) continue;
 
-            // Solde d'ouverture = solde de clôture de la veille (ou solde actuel si 1er jour)
             LocalDate veille = date.minusDays(1);
             BigDecimal soldeOuverture = soldeDAO.getSoldeCloture(client.getId(), veille)
                 .orElse(client.getSoldeActuel());
 
-            // Sorties du jour (montant total facturé)
+            // Sorties du jour (montant total net des commandes)
             BigDecimal sortiesJour = getSortiesClientJour(client.getId(), date);
 
             // Versements du jour
@@ -72,14 +62,10 @@ public class ClotureService {
         log.info("Clôture journalière {} terminée — {} clients", date, nbTraites);
     }
 
-    /**
-     * Clôture mensuelle : consolide les soldes du mois.
-     */
     public void cloturerMois(int annee, int mois) {
         LocalDate debut = LocalDate.of(annee, mois, 1);
         LocalDate fin   = debut.withDayOfMonth(debut.lengthOfMonth());
 
-        // Exécuter la clôture journalière pour chaque jour du mois si elle n'existe pas
         LocalDate jour = debut;
         while (!jour.isAfter(fin)) {
             try {
@@ -100,17 +86,16 @@ public class ClotureService {
 
     // ── Helpers ──────────────────────────────────────────────────
     private BigDecimal getSortiesClientJour(String clientId, LocalDate date) {
-        List<Facture> factures = factureDAO.findByFilters(date, date, clientId, null);
-        return factures.stream()
-            .filter(f -> !f.isEstAnnulee())
-            .map(Facture::getMontantTtc)
+        return ficheDAO.findLignesByDate(date).stream()
+            .filter(l -> l.getClient() != null && clientId.equals(l.getClient().getId()))
+            .map(LigneCommande::getMontantHt)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private BigDecimal getVersementsClientJour(String clientId, LocalDate date) {
         return versementDAO.findByDate(date).stream()
             .filter(v -> v.getClient() != null && clientId.equals(v.getClient().getId()))
-            .map(Versement::getMontantEnregistre)
+            .map(Versement::getMontantRemis)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

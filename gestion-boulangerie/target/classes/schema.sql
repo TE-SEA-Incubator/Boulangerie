@@ -90,10 +90,13 @@ CREATE TABLE IF NOT EXISTS client (
     est_anonyme        TINYINT(1)     NOT NULL DEFAULT 0,
     type_client        ENUM('Nominatif','Anonyme') NOT NULL DEFAULT 'Nominatif',
     solde_actuel       DECIMAL(15,2)  NOT NULL DEFAULT 0,
+    livreur_rattache   VARCHAR(36),
+    solde_precedent    DECIMAL(15,2)  NOT NULL DEFAULT 0,
     statut             ENUM('Actif','Bloqué','Inactif') NOT NULL DEFAULT 'Actif',
     notes              TEXT,
     date_creation      DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (categorie_id) REFERENCES categorie_client(id)
+    FOREIGN KEY (categorie_id) REFERENCES categorie_client(id),
+    FOREIGN KEY (livreur_rattache) REFERENCES utilisateur(id)
 );
 
 -- ─────────────────────────────────────────────

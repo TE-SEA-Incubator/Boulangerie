@@ -3,6 +3,7 @@ package com.boulangerie.service;
 import com.boulangerie.dao.VersementDAO;
 import com.boulangerie.model.*;
 import com.boulangerie.util.FormatUtil;
+import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
@@ -10,7 +11,9 @@ import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
@@ -18,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -25,7 +30,7 @@ import java.util.List;
 
 /**
  * Service d'export PDF avec iText 7.
- * Couvre : Facture, Liste factures, Recouvrement, Soldes clients, Audit.
+ * Couvre : Recouvrement, Soldes clients, Audit, Fiche Sortie, Fiche Caisse.
  */
 public class PdfService {
     private static final Logger log = LoggerFactory.getLogger(PdfService.class);
@@ -37,144 +42,6 @@ public class PdfService {
     private static final DeviceRgb GRIS_FOND  = new DeviceRgb(0xF4, 0xF6, 0xFA);
     private static final DeviceRgb GRIS_TEXTE = new DeviceRgb(0x5F, 0x63, 0x68);
     private static final DeviceRgb MARRON     = new DeviceRgb(0x6B, 0x3A, 0x2A);
-
-    // ── Facture individuelle ─────────────────────────────────────
-    public static void exporterFacture(Facture facture, List<LigneCommande> lignes, String cheminPdf) throws Exception {
-        try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(cheminPdf));
-             Document doc = new Document(pdfDoc, PageSize.A4)) {
-
-            doc.setMargins(40, 50, 40, 50);
-
-            PdfFont fontBold = getFont(true);
-            PdfFont fontNorm = getFont(false);
-
-            // ── En-tête entreprise ────────────────────────────────
-            Table header = new Table(UnitValue.createPercentArray(new float[]{50, 50})).useAllAvailableWidth();
-            Cell logoCell = new Cell().add(new Paragraph("🥖 BOULANGERIE")
-                .setFont(fontBold).setFontSize(18).setFontColor(MARRON))
-                .add(new Paragraph("Qualité & Tradition").setFont(fontNorm).setFontSize(10).setFontColor(GRIS_TEXTE))
-                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
-
-            String clientNom = facture.getClient() != null ? facture.getClient().getNom() : "Client anonyme";
-            String livreurNom = facture.getLivreur() != null ? facture.getLivreur().getNomComplet() : "—";
-            Cell infoCell = new Cell()
-                .add(new Paragraph("FACTURE").setFont(fontBold).setFontSize(20).setTextAlignment(TextAlignment.RIGHT))
-                .add(new Paragraph("N° " + facture.getNumero()).setFont(fontNorm).setFontSize(11).setTextAlignment(TextAlignment.RIGHT))
-                .add(new Paragraph("Date : " + FormatUtil.date(facture.getDateEmission())).setFont(fontNorm).setFontSize(10).setTextAlignment(TextAlignment.RIGHT))
-                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
-
-            header.addCell(logoCell);
-            header.addCell(infoCell);
-            doc.add(header);
-            doc.add(new LineSeparator(new com.itextpdf.kernel.pdf.canvas.draw.SolidLine()));
-            doc.add(new Paragraph("\n").setFontSize(4));
-
-            // ── Info client ───────────────────────────────────────
-            Table infoTable = new Table(UnitValue.createPercentArray(new float[]{50, 50})).useAllAvailableWidth();
-            infoTable.addCell(infoCell("Client :", clientNom, fontBold, fontNorm));
-            infoTable.addCell(infoCell("Livreur :", livreurNom, fontBold, fontNorm));
-            infoTable.addCell(infoCell("Mode de règlement :",
-                facture.getModeReglement() != null ? facture.getModeReglement() : "Comptant", fontBold, fontNorm));
-            infoTable.addCell(infoCell("Vente :", "Vente comptoir", fontBold, fontNorm));
-            doc.add(infoTable);
-            doc.add(new Paragraph("\n").setFontSize(6));
-
-            // ── Tableau des lignes ────────────────────────────────
-            Table lignesTable = new Table(UnitValue.createPercentArray(new float[]{40, 15, 20, 25}))
-                .useAllAvailableWidth();
-
-            // En-tête tableau
-            for (String col : new String[]{"Désignation", "Qté nette", "Tarif unitaire (HT)", "Montant (HT)"}) {
-                lignesTable.addHeaderCell(new Cell()
-                    .add(new Paragraph(col).setFont(fontBold).setFontSize(10).setFontColor(ColorConstants.WHITE))
-                    .setBackgroundColor(BLEU)
-                    .setTextAlignment(TextAlignment.CENTER));
-            }
-
-            // Lignes filtrées pour ce client
-            if (lignes != null) {
-                for (LigneCommande l : lignes) {
-                    if (facture.getClient() != null && l.getClient() != null
-                            && !facture.getClient().getId().equals(l.getClient().getId())) continue;
-                    if (l.getQuantiteNette() == 0) continue;
-
-                    lignesTable.addCell(new Cell().add(new Paragraph(
-                        l.getProduit() != null ? l.getProduit().getLibelle() : "—").setFont(fontNorm).setFontSize(10)));
-                    lignesTable.addCell(new Cell().add(new Paragraph(String.valueOf(l.getQuantiteNette()))
-                        .setFont(fontNorm).setFontSize(10)).setTextAlignment(TextAlignment.CENTER));
-                    lignesTable.addCell(new Cell().add(new Paragraph(FormatUtil.montant(l.getTarifApplicable()))
-                        .setFont(fontNorm).setFontSize(10)).setTextAlignment(TextAlignment.RIGHT));
-                    lignesTable.addCell(new Cell().add(new Paragraph(FormatUtil.montant(l.getMontantHt()))
-                        .setFont(fontNorm).setFontSize(10)).setTextAlignment(TextAlignment.RIGHT));
-                }
-            }
-
-            // Remise si applicable
-            if (facture.getNotes() != null && !facture.getNotes().isBlank()) {
-                lignesTable.addCell(new Cell(1, 4).add(new Paragraph("Note : " + facture.getNotes())
-                    .setFont(fontNorm).setFontSize(9).setFontColor(GRIS_TEXTE)));
-            }
-
-            doc.add(lignesTable);
-            doc.add(new Paragraph("\n").setFontSize(4));
-
-            // ── Totaux ────────────────────────────────────────────
-            Table totauxTable = new Table(UnitValue.createPercentArray(new float[]{65, 35})).useAllAvailableWidth();
-            totauxTable.addCell(new Cell().setBorder(com.itextpdf.layout.borders.Border.NO_BORDER));
-            Table totaux = new Table(UnitValue.createPercentArray(new float[]{60, 40})).useAllAvailableWidth();
-            addTotalRow(totaux, "Total HT",      FormatUtil.montant(facture.getMontantHt()), fontNorm, false);
-            addTotalRow(totaux, "TVA (" + facture.getTvaPct() + "%)", FormatUtil.montant(facture.getTvaMontant()), fontNorm, false);
-            addTotalRow(totaux, "Total TTC",     FormatUtil.montant(facture.getMontantTtc()), fontBold, true);
-            totauxTable.addCell(new Cell().add(totaux).setBorder(com.itextpdf.layout.borders.Border.NO_BORDER));
-            doc.add(totauxTable);
-
-            // ── Pied de page ──────────────────────────────────────
-            doc.add(new LineSeparator(new com.itextpdf.kernel.pdf.canvas.draw.SolidLine()));
-            doc.add(new Paragraph(
-                "Période : " + FormatUtil.date(facture.getDateEmission()) +
-                " au " + FormatUtil.date(facture.getDateEmission()) +
-                "   |   Utilisateur : " + (facture.getCreePar() != null ? facture.getCreePar() : "—") +
-                "   |   Généré le : " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) +
-                "   |   Page 1 / 1")
-                .setFont(fontNorm).setFontSize(8).setFontColor(GRIS_TEXTE)
-                .setTextAlignment(TextAlignment.CENTER));
-
-            log.info("PDF facture exporté : {}", cheminPdf);
-        }
-    }
-
-    // ── Liste des factures ───────────────────────────────────────
-    public static void exporterListeFactures(List<Facture> factures, String cheminPdf) throws Exception {
-        try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(cheminPdf));
-             Document doc = new Document(pdfDoc, PageSize.A4.rotate())) {
-
-            doc.setMargins(30, 30, 30, 30);
-            PdfFont fontBold = getFont(true);
-            PdfFont fontNorm = getFont(false);
-
-            ajouterTitrePage(doc, "Liste des Factures", fontBold, fontNorm);
-
-            Table table = new Table(UnitValue.createPercentArray(new float[]{15, 12, 22, 18, 14, 10, 12, 12}))
-                .useAllAvailableWidth();
-
-            for (String col : new String[]{"N° Facture","Date","Client","Livreur","Montant HT","TVA","TTC","Statut"}) {
-                table.addHeaderCell(headerCell(col, fontBold));
-            }
-
-            for (Facture f : factures) {
-                table.addCell(dataCell(f.getNumero(), fontNorm));
-                table.addCell(dataCell(FormatUtil.date(f.getDateEmission()), fontNorm));
-                table.addCell(dataCell(f.getClient() != null ? f.getClient().getNom() : "Anonyme", fontNorm));
-                table.addCell(dataCell(f.getLivreur() != null ? f.getLivreur().getNomComplet() : "—", fontNorm));
-                table.addCell(dataCellRight(FormatUtil.montant(f.getMontantHt()), fontNorm));
-                table.addCell(dataCellRight(FormatUtil.montant(f.getTvaMontant()), fontNorm));
-                table.addCell(dataCellRight(FormatUtil.montant(f.getMontantTtc()), fontBold));
-                table.addCell(dataCell(f.getStatut().name(), fontNorm));
-            }
-            doc.add(table);
-            ajouterPiedPage(doc, fontNorm);
-        }
-    }
 
     // ── Recouvrement mensuel ─────────────────────────────────────
     public static void exporterRecouvrement(VersementDAO versementDAO, LocalDate du, LocalDate au, String cheminPdf) throws Exception {
@@ -189,24 +56,24 @@ public class PdfService {
                 + FormatUtil.date(du) + " — " + FormatUtil.date(au), fontBold, fontNorm);
 
             // Résumé global
-            java.math.BigDecimal attendu    = versementDAO.getMontantAttenduJour(au);
-            java.math.BigDecimal remis      = versementDAO.getMontantRemisJour(au);
-            java.math.BigDecimal enregistre = versementDAO.getMontantEnregistreJour(au);
-            java.math.BigDecimal ecart      = remis.subtract(enregistre);
-            java.math.BigDecimal taux = attendu.compareTo(java.math.BigDecimal.ZERO) > 0
-                ? enregistre.divide(attendu, 4, java.math.RoundingMode.HALF_UP)
-                    .multiply(java.math.BigDecimal.valueOf(100)).setScale(2, java.math.RoundingMode.HALF_UP)
-                : java.math.BigDecimal.ZERO;
+            BigDecimal attendu    = versementDAO.getMontantAttenduJour(au);
+            BigDecimal remis      = versementDAO.getMontantRemisJour(au);
+            BigDecimal enregistre = versementDAO.getMontantRemisJour(au);
+            BigDecimal ecart      = remis.subtract(attendu); // Ecart réel
+            BigDecimal taux = attendu.compareTo(BigDecimal.ZERO) > 0
+                ? remis.divide(attendu, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
 
             Table resume = new Table(UnitValue.createPercentArray(new float[]{40, 30, 30})).useAllAvailableWidth();
-            resume.addHeaderCell(headerCell("Objectif (TTC)", fontBold));
-            resume.addHeaderCell(headerCell("Réalisé (TTC)", fontBold));
+            resume.addHeaderCell(headerCell("Objectif", fontBold));
+            resume.addHeaderCell(headerCell("Réalisé", fontBold));
             resume.addHeaderCell(headerCell("Taux de recouvrement", fontBold));
             resume.addCell(dataCellRight(FormatUtil.montant(attendu), fontNorm));
-            resume.addCell(dataCellRight(FormatUtil.montant(enregistre), fontNorm));
+            resume.addCell(dataCellRight(FormatUtil.montant(remis), fontNorm));
             Cell tauxCell = new Cell().add(new Paragraph(taux + " %")
                 .setFont(fontBold).setFontSize(14)
-                .setFontColor(taux.compareTo(java.math.BigDecimal.valueOf(80)) >= 0 ? VERT : ROUGE)
+                .setFontColor(taux.compareTo(BigDecimal.valueOf(80)) >= 0 ? VERT : ROUGE)
                 .setTextAlignment(TextAlignment.CENTER));
             resume.addCell(tauxCell);
             doc.add(resume);
@@ -214,7 +81,7 @@ public class PdfService {
             doc.add(new Paragraph("\n").setFontSize(6));
             doc.add(new Paragraph("Écart total : " + FormatUtil.montant(ecart))
                 .setFont(fontBold).setFontSize(12)
-                .setFontColor(ecart.compareTo(java.math.BigDecimal.ZERO) < 0 ? ROUGE : VERT));
+                .setFontColor(ecart.compareTo(BigDecimal.ZERO) < 0 ? ROUGE : VERT));
 
             ajouterPiedPage(doc, fontNorm);
         }
@@ -231,36 +98,35 @@ public class PdfService {
 
             ajouterTitrePage(doc, "État des Soldes Clients — " + FormatUtil.date(LocalDate.now()), fontBold, fontNorm);
 
-            Table table = new Table(UnitValue.createPercentArray(new float[]{12, 25, 15, 15, 16, 17}))
+            Table table = new Table(UnitValue.createPercentArray(new float[]{12, 25, 15, 16, 17}))
                 .useAllAvailableWidth();
 
-            for (String col : new String[]{"Code","Nom","Catégorie","Délai (j)","Solde précédent","Solde actuel"}) {
+            for (String col : new String[]{"Code","Nom","Catégorie","Solde précédent","Solde actuel"}) {
                 table.addHeaderCell(headerCell(col, fontBold));
             }
 
-            java.math.BigDecimal totalSolde = java.math.BigDecimal.ZERO;
+            BigDecimal totalSolde = BigDecimal.ZERO;
             for (Client cl : clients) {
                 if (!cl.isNominatif()) continue;
                 table.addCell(dataCell(cl.getCode(), fontNorm));
                 table.addCell(dataCell(cl.getNom(), fontNorm));
                 table.addCell(dataCell(cl.getCategorie() != null ? cl.getCategorie().getNom() : "—", fontNorm));
-                table.addCell(dataCellRight(String.valueOf(cl.getDelaiPaiement()), fontNorm));
                 table.addCell(dataCellRight(FormatUtil.montant(cl.getSoldePrecedent()), fontNorm));
                 Cell soldeCell = new Cell().add(new Paragraph(FormatUtil.montant(cl.getSoldeActuel()))
                     .setFont(fontBold)
-                    .setFontColor(cl.getSoldeActuel().compareTo(java.math.BigDecimal.ZERO) > 0 ? ROUGE : VERT)
+                    .setFontColor(cl.getSoldeActuel().compareTo(BigDecimal.ZERO) > 0 ? ROUGE : VERT)
                     .setTextAlignment(TextAlignment.RIGHT));
                 table.addCell(soldeCell);
                 totalSolde = totalSolde.add(cl.getSoldeActuel());
             }
 
             // Ligne total
-            table.addFooterCell(new Cell(1, 5)
+            table.addFooterCell(new Cell(1, 4)
                 .add(new Paragraph("TOTAL").setFont(fontBold))
                 .setBackgroundColor(GRIS_FOND));
             table.addFooterCell(new Cell()
                 .add(new Paragraph(FormatUtil.montant(totalSolde)).setFont(fontBold)
-                    .setFontColor(totalSolde.compareTo(java.math.BigDecimal.ZERO) > 0 ? ROUGE : VERT)
+                    .setFontColor(totalSolde.compareTo(BigDecimal.ZERO) > 0 ? ROUGE : VERT)
                     .setTextAlignment(TextAlignment.RIGHT))
                 .setBackgroundColor(GRIS_FOND));
 
@@ -326,7 +192,7 @@ public class PdfService {
                 table.addHeaderCell(headerCell(col, fontBold));
             }
 
-            java.math.BigDecimal totNet = java.math.BigDecimal.ZERO;
+            BigDecimal totNet = BigDecimal.ZERO;
             for (FicheJournaliere f : fiches) {
                 table.addCell(dataCell(f.getNumero(), fontNorm));
                 table.addCell(dataCell(FormatUtil.date(f.getDateFiche()), fontNorm));
@@ -359,13 +225,12 @@ public class PdfService {
                 .setFontColor(MARRON).setTextAlignment(TextAlignment.CENTER));
             doc.add(new Paragraph("Reçu de versement").setFont(fontBold).setFontSize(14)
                 .setTextAlignment(TextAlignment.CENTER));
-            doc.add(new LineSeparator(new com.itextpdf.kernel.pdf.canvas.draw.SolidLine()));
+            doc.add(new LineSeparator(new SolidLine()));
             doc.add(new Paragraph("\n").setFontSize(4));
 
             String[][] lignes = {
                 {"N° Reçu :",      versement.getNumero()},
                 {"Date :",         FormatUtil.date(versement.getDateVersement())},
-                {"Facture :",      versement.getFacture() != null ? versement.getFacture().getNumero() : "—"},
                 {"Client :",       versement.getClient() != null ? versement.getClient().getNom() : "—"},
                 {"Livreur :",      versement.getLivreur() != null ? versement.getLivreur().getNomComplet() : "—"},
                 {"Montant reçu :", FormatUtil.montant(versement.getMontantRemis()) + " FCFA"},
@@ -375,9 +240,9 @@ public class PdfService {
             Table infoTable = new Table(UnitValue.createPercentArray(new float[]{45, 55})).useAllAvailableWidth();
             for (String[] row : lignes) {
                 infoTable.addCell(new Cell().add(new Paragraph(row[0]).setFont(fontBold).setFontSize(11))
-                    .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER));
+                    .setBorder(Border.NO_BORDER));
                 infoTable.addCell(new Cell().add(new Paragraph(row[1]).setFont(fontNorm).setFontSize(11))
-                    .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER));
+                    .setBorder(Border.NO_BORDER));
             }
             doc.add(infoTable);
 
@@ -393,8 +258,8 @@ public class PdfService {
     private static PdfFont getFont(boolean bold) {
         try {
             return bold
-                ? PdfFontFactory.createFont(com.itextpdf.io.font.constants.StandardFonts.HELVETICA_BOLD)
-                : PdfFontFactory.createFont(com.itextpdf.io.font.constants.StandardFonts.HELVETICA);
+                ? PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD)
+                : PdfFontFactory.createFont(StandardFonts.HELVETICA);
         } catch (IOException e) {
             throw new RuntimeException("Erreur chargement police PDF", e);
         }
@@ -423,7 +288,7 @@ public class PdfService {
             table.addHeaderCell(headerCell("Montant (FCFA)", fontBold));
 
             int totalSortie = 0, totalRetour = 0, totalNet = 0;
-            java.math.BigDecimal totalMontant = java.math.BigDecimal.ZERO;
+            BigDecimal totalMontant = BigDecimal.ZERO;
 
             int idx = 1;
             for (LigneCommande l : lignes) {
@@ -459,7 +324,7 @@ public class PdfService {
     }
 
     // ── Fiche de Facturation & Caisse Journalière (conforme modèle Excel FICHE DE FACTURATION) ──
-    public static void exporterFicheCaisse(LocalDate date, List<com.boulangerie.model.FicheCaisseLigne> lignes, String cheminPdf) throws Exception {
+    public static void exporterFicheCaisse(LocalDate date, List<FicheCaisseLigne> lignes, String cheminPdf) throws Exception {
         try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(cheminPdf));
              Document doc = new Document(pdfDoc, PageSize.A4.rotate())) {
 
@@ -481,14 +346,14 @@ public class PdfService {
             table.addHeaderCell(headerCell("Versement Reçu", fontBold));
             table.addHeaderCell(headerCell("Reste Dû", fontBold));
 
-            java.math.BigDecimal totFac = java.math.BigDecimal.ZERO;
-            java.math.BigDecimal totEcartPrec = java.math.BigDecimal.ZERO;
-            java.math.BigDecimal totSolde = java.math.BigDecimal.ZERO;
-            java.math.BigDecimal totVers = java.math.BigDecimal.ZERO;
-            java.math.BigDecimal totReste = java.math.BigDecimal.ZERO;
+            BigDecimal totFac = BigDecimal.ZERO;
+            BigDecimal totEcartPrec = BigDecimal.ZERO;
+            BigDecimal totSolde = BigDecimal.ZERO;
+            BigDecimal totVers = BigDecimal.ZERO;
+            BigDecimal totReste = BigDecimal.ZERO;
 
             int idx = 1;
-            for (com.boulangerie.model.FicheCaisseLigne fl : lignes) {
+            for (FicheCaisseLigne fl : lignes) {
                 table.addCell(dataCell(String.valueOf(idx++), fontNorm));
                 table.addCell(dataCell(fl.getClient() != null ? fl.getClient().getNom() : "—", fontBold));
                 table.addCell(dataCell(fl.getResumeSorties().isEmpty() ? "—" : fl.getResumeSorties(), fontNorm));
@@ -498,7 +363,7 @@ public class PdfService {
                 table.addCell(dataCellRight(FormatUtil.montant(fl.getMontantVerse()), fontBold));
 
                 Cell cellReste = dataCellRight(FormatUtil.montant(fl.getReste()), fontBold);
-                if (fl.getReste().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                if (fl.getReste().compareTo(BigDecimal.ZERO) > 0) {
                     cellReste.setFontColor(ROUGE);
                 } else {
                     cellReste.setFontColor(VERT);
@@ -525,7 +390,7 @@ public class PdfService {
                 .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT));
             Cell cTotReste = new Cell().add(new Paragraph(FormatUtil.montant(totReste)).setFont(fontBold).setFontSize(9))
                 .setBackgroundColor(GRIS_FOND).setTextAlignment(TextAlignment.RIGHT);
-            cTotReste.setFontColor(totReste.compareTo(java.math.BigDecimal.ZERO) > 0 ? ROUGE : VERT);
+            cTotReste.setFontColor(totReste.compareTo(BigDecimal.ZERO) > 0 ? ROUGE : VERT);
             table.addCell(cTotReste);
 
             doc.add(table);
@@ -537,12 +402,12 @@ public class PdfService {
         doc.add(new Paragraph("🥖 BOULANGERIE — " + titre)
             .setFont(fontBold).setFontSize(14).setFontColor(MARRON)
             .setTextAlignment(TextAlignment.CENTER));
-        doc.add(new LineSeparator(new com.itextpdf.kernel.pdf.canvas.draw.SolidLine()));
+        doc.add(new LineSeparator(new SolidLine()));
         doc.add(new Paragraph("\n").setFontSize(4));
     }
 
     private static void ajouterPiedPage(Document doc, PdfFont fontNorm) {
-        doc.add(new LineSeparator(new com.itextpdf.kernel.pdf.canvas.draw.SolidLine()));
+        doc.add(new LineSeparator(new SolidLine()));
         doc.add(new Paragraph("Généré le " + LocalDateTime.now()
             .format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + " — Page 1")
             .setFont(fontNorm).setFontSize(8).setFontColor(GRIS_TEXTE).setTextAlignment(TextAlignment.RIGHT));
@@ -566,7 +431,7 @@ public class PdfService {
         return new Cell()
             .add(new Paragraph(label).setFont(fontBold).setFontSize(9).setFontColor(GRIS_TEXTE))
             .add(new Paragraph(value).setFont(fontNorm).setFontSize(10))
-            .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
+            .setBorder(Border.NO_BORDER);
     }
 
     private static void addTotalRow(Table table, String label, String value, PdfFont font, boolean highlight) {
@@ -577,5 +442,62 @@ public class PdfService {
         if (bg != null) { lCell.setBackgroundColor(bg); vCell.setBackgroundColor(bg); }
         table.addCell(lCell);
         table.addCell(vCell);
+    }
+
+    // ── Export Facture unique ──────────────────────────────────
+    public static void exporterFacture(Facture f, List<LigneCommande> lignes, String cheminPdf) throws Exception {
+        try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(cheminPdf));
+             Document doc = new Document(pdfDoc, PageSize.A4)) {
+            doc.setMargins(30, 30, 30, 30);
+            PdfFont fontBold = getFont(true);
+            PdfFont fontNorm = getFont(false);
+            ajouterTitrePage(doc, "FACTURE N° " + f.getNumero(), fontBold, fontNorm);
+            Table info = new Table(UnitValue.createPercentArray(new float[]{50, 50})).useAllAvailableWidth();
+            info.addCell(infoCell("Client :", f.getClient() != null ? f.getClient().getNom() : "—", fontBold, fontNorm));
+            info.addCell(infoCell("Date :", FormatUtil.date(f.getDateEmission()), fontBold, fontNorm));
+            doc.add(info);
+            doc.add(new Paragraph("\n").setFontSize(6));
+            Table table = new Table(UnitValue.createPercentArray(new float[]{40, 15, 20, 25})).useAllAvailableWidth();
+            table.addHeaderCell(headerCell("Désignation", fontBold));
+            table.addHeaderCell(headerCell("Quantité", fontBold));
+            table.addHeaderCell(headerCell("Prix Unit.", fontBold));
+            table.addHeaderCell(headerCell("Montant HT", fontBold));
+            if (lignes != null) {
+                for (LigneCommande l : lignes) {
+                    table.addCell(dataCell(l.getProduit() != null ? l.getProduit().getLibelle() : "—", fontNorm));
+                    table.addCell(dataCellRight(String.valueOf(l.getQuantiteNette()), fontNorm));
+                    table.addCell(dataCellRight(FormatUtil.montant(l.getPrixUnitaire()), fontNorm));
+                    table.addCell(dataCellRight(FormatUtil.montant(l.getMontantHt()), fontNorm));
+                }
+            }
+            doc.add(table);
+            doc.add(new Paragraph("\nTotal TTC : " + FormatUtil.montant(f.getMontantTtc()) + " FCFA").setFont(fontBold).setFontSize(12));
+            ajouterPiedPage(doc, fontNorm);
+        }
+    }
+
+    // ── Export Liste Factures ──────────────────────────────────
+    public static void exporterListeFactures(List<Facture> factures, String cheminPdf) throws Exception {
+        try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(cheminPdf));
+             Document doc = new Document(pdfDoc, PageSize.A4.rotate())) {
+            doc.setMargins(30, 30, 30, 30);
+            PdfFont fontBold = getFont(true);
+            PdfFont fontNorm = getFont(false);
+            ajouterTitrePage(doc, "Liste des Factures — " + FormatUtil.date(LocalDate.now()), fontBold, fontNorm);
+            Table table = new Table(UnitValue.createPercentArray(new float[]{15, 12, 25, 16, 16, 16})).useAllAvailableWidth();
+            for (String col : new String[]{"N° Facture","Date","Client","Montant HT","Montant TTC","Statut"}) {
+                table.addHeaderCell(headerCell(col, fontBold));
+            }
+            for (Facture f : factures) {
+                table.addCell(dataCell(f.getNumero(), fontNorm));
+                table.addCell(dataCell(FormatUtil.date(f.getDateEmission()), fontNorm));
+                table.addCell(dataCell(f.getClient() != null ? f.getClient().getNom() : "—", fontNorm));
+                table.addCell(dataCellRight(FormatUtil.montant(f.getMontantHt()), fontNorm));
+                table.addCell(dataCellRight(FormatUtil.montant(f.getMontantTtc()), fontBold));
+                table.addCell(dataCell(f.getStatut().name(), fontNorm));
+            }
+            doc.add(table);
+            ajouterPiedPage(doc, fontNorm);
+        }
     }
 }

@@ -13,6 +13,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.stage.Screen;
@@ -53,7 +55,7 @@ public class MainWindow {
     public static final String DASHBOARD    = "DASHBOARD";
     public static final String PRODUITS     = "PRODUITS";
     public static final String CLIENTS      = "CLIENTS";
-    public static final String SORTIES      = "SORTIES";
+    public static final String SORTIES      = "COMMANDES";
     public static final String FACTURATION  = "FACTURATION";
     public static final String CAISSE       = "CAISSE";
     public static final String RECOUVREMENT = "RECOUVREMENT";
@@ -66,7 +68,7 @@ public class MainWindow {
         new NavItem("Tableau de bord", DASHBOARD, null, BootstrapIcons.GRID_1X2_FILL),
         new NavItem("Produits", PRODUITS, "PRODUIT_READ", BootstrapIcons.BOX_SEAM),
         new NavItem("Clients", CLIENTS, "CLIENT_READ", BootstrapIcons.PEOPLE_FILL),
-        new NavItem("Sorties", SORTIES, "SORTIE_READ", BootstrapIcons.JOURNAL_TEXT),
+        new NavItem("Commandes", SORTIES, "SORTIE_READ", BootstrapIcons.JOURNAL_TEXT),
         new NavItem("Caisse", CAISSE, "CAISSE_READ", BootstrapIcons.CASH_STACK),
         new NavItem("Recouvrement", RECOUVREMENT, "RECOUVREMENT_READ", BootstrapIcons.BAR_CHART_FILL),
         new NavItem("Utilisateurs", UTILISATEURS, "USER_WRITE", BootstrapIcons.PEOPLE_FILL),
@@ -127,7 +129,7 @@ public class MainWindow {
         // Icône de la fenêtre principale
         try {
             var iconUrl = getClass().getClassLoader().getResource("assets/icone.png");
-            if (iconUrl != null) stage.getIcons().add(new javafx.scene.image.Image(iconUrl.toExternalForm()));
+            if (iconUrl != null) stage.getIcons().add(new Image(iconUrl.toExternalForm()));
         } catch (Exception ignored) {}
 
         stage.setScene(scene);
@@ -181,9 +183,9 @@ public class MainWindow {
         try {
             var logoUrl = getClass().getClassLoader().getResource("assets/logo.png");
             if (logoUrl != null) {
-                javafx.scene.image.Image img = new javafx.scene.image.Image(
+                Image img = new Image(
                     logoUrl.toExternalForm(), 32, 32, true, true);
-                javafx.scene.image.ImageView iv = new javafx.scene.image.ImageView(img);
+                ImageView iv = new ImageView(img);
                 iv.setFitWidth(32); iv.setFitHeight(32);
                 iv.setPreserveRatio(true);
                 logoBox.getChildren().add(iv);
@@ -364,7 +366,7 @@ public class MainWindow {
             lblHeure.setText(LocalDateTime.now().format(
                 DateTimeFormatter.ofPattern(
                     "EEEE d MMMM yyyy   HH:mm:ss",
-                    java.util.Locale.FRENCH)));
+                    Locale.FRENCH)));
         }
     }
 
@@ -415,6 +417,13 @@ public class MainWindow {
     private void updateNavIconColor(Button btn, String color) {
         if (btn.getGraphic() instanceof FontIcon icon) {
             icon.setIconColor(Color.web(color));
+        }
+    }
+
+    public void navigateToCommandes() {
+        navigate(SORTIES);
+        if (navButtons.containsKey(SORTIES)) {
+            setActiveNavBtn(navButtons.get(SORTIES));
         }
     }
 

@@ -45,6 +45,7 @@ public class LigneCommande {
     public void setMontantHt(BigDecimal montantHt) { this.montantHt = montantHt; }
     public String getMotifRetour() { return motifRetour; }
     public void setMotifRetour(String motifRetour) { this.motifRetour = motifRetour; }
+    public BigDecimal getPrixUnitaire() { return tarifApplicable != null ? tarifApplicable : (produit != null ? produit.getPrixUnitaire() : BigDecimal.ZERO); }
 
     public int getQuantiteNette() { return quantiteSortie - quantiteRetournee; }
 

@@ -386,7 +386,13 @@ public class RapportsFxPanel extends FxPanelBase {
         FileChooser fc = new FileChooser();
         fc.setTitle("Exporter en Excel / CSV");
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Feuille Excel / CSV (*.csv)", "*.csv"));
-        fc.setInitialFileName(type.replace(" ", "_").toLowerCase() + "_" + date + ".csv");
+        String fileName;
+        if ("Fiche Journalière des Sorties & Retours".equals(type)) {
+            fileName = "SORTIE " + date.format(java.time.format.DateTimeFormatter.ofPattern("ddMMuu")) + ".csv";
+        } else {
+            fileName = type.replace(" ", "_").toLowerCase() + "_" + date + ".csv";
+        }
+        fc.setInitialFileName(fileName);
         File f = fc.showSaveDialog(mainWindow.getStage());
         if (f == null) return;
 

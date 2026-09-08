@@ -23,18 +23,11 @@ public class ClientDAO {
     public List<Client> search(String texte, String categorieId, String statut, boolean anonymeSeulement) {
         List<Client> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
-            SELECT c.*, cat.id AS cat_id, cat.nom AS cat_nom,
-                   u.id AS liv_id, u.nom_complet AS liv_nom,
-                   df.derniere_facture_date
+            SELECT c.*, cat.id AS cat_id, cat.nom AS cat_nom, cat.pourcentage_remise,
+                   u.id AS liv_id, u.nom_complet AS liv_nom
             FROM client c
             LEFT JOIN categorie_client cat ON c.categorie_id = cat.id
             LEFT JOIN utilisateur u ON c.livreur_rattache = u.id
-            LEFT JOIN (
-                SELECT client_id, MAX(date_emission) AS derniere_facture_date
-                FROM facture
-                WHERE statut IN ('En attente', 'Partielle')
-                GROUP BY client_id
-            ) df ON df.client_id = c.id
             WHERE 1=1
             """);
         List<Object> params = new ArrayList<>();
@@ -63,18 +56,11 @@ public class ClientDAO {
 
     public Optional<Client> findById(String id) {
         String sql = """
-            SELECT c.*, cat.id AS cat_id, cat.nom AS cat_nom,
-                   u.id AS liv_id, u.nom_complet AS liv_nom,
-                   df.derniere_facture_date
+            SELECT c.*, cat.id AS cat_id, cat.nom AS cat_nom, cat.pourcentage_remise,
+                   u.id AS liv_id, u.nom_complet AS liv_nom
             FROM client c
             LEFT JOIN categorie_client cat ON c.categorie_id = cat.id
             LEFT JOIN utilisateur u ON c.livreur_rattache = u.id
-            LEFT JOIN (
-                SELECT client_id, MAX(date_emission) AS derniere_facture_date
-                FROM facture
-                WHERE statut IN ('En attente', 'Partielle')
-                GROUP BY client_id
-            ) df ON df.client_id = c.id
             WHERE c.id=?
             """;
         try (Connection c = db.getConnection();
@@ -109,7 +95,11 @@ public class ClientDAO {
              PreparedStatement ps = c.prepareStatement(sql)) {
             setClientParams(ps, client);
             ps.executeUpdate();
-            return findIdByCode(client.getCode(), c);
+            String id = findIdByCode(client.getCode(), c);
+            if (id != null) {
+                client.setId(id);
+            }
+            return id;
         } catch (SQLException e) {
             log.error("save client", e);
             throw new RuntimeException(e);
@@ -170,11 +160,15 @@ public class ClientDAO {
 
     public List<CategorieClient> findAllCategories() {
         List<CategorieClient> list = new ArrayList<>();
-        String sql = "SELECT id, nom FROM categorie_client ORDER BY nom";
+        String sql = "SELECT id, nom, pourcentage_remise FROM categorie_client ORDER BY nom";
         try (Connection c = db.getConnection();
              Statement st = c.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
-            while (rs.next()) list.add(new CategorieClient(rs.getString("id"), rs.getString("nom")));
+            while (rs.next()) {
+                CategorieClient cat = new CategorieClient(rs.getString("id"), rs.getString("nom"));
+                cat.setPourcentageRemise(rs.getBigDecimal("pourcentage_remise"));
+                list.add(cat);
+            }
         } catch (SQLException e) {
             log.error("findAllCategories", e);
         }
@@ -198,7 +192,7 @@ public class ClientDAO {
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
             ps.setString(1, b.getClientId());
-            ps.setDate(2, java.sql.Date.valueOf(b.getDateBlocage()));
+            ps.setDate(2, Date.valueOf(b.getDateBlocage()));
             ps.setString(3, b.getMotif());
             ps.setBigDecimal(4, b.getMontantDette());
             ps.setString(5, b.getStatut().name());
@@ -221,6 +215,47 @@ public class ClientDAO {
             throw new RuntimeException(e);
         }
     }
+
+    public void updateCategorie(CategorieClient cat) {
+        String sql = "UPDATE categorie_client SET nom=?, pourcentage_remise=? WHERE id=?";
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, cat.getNom());
+            ps.setBigDecimal(2, cat.getPourcentageRemise());
+            ps.setString(3, cat.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            log.error("updateCategorie", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public String saveCategorie(CategorieClient cat) {
+        String sql = "INSERT INTO categorie_client (id, nom, pourcentage_remise) VALUES (UUID(), ?, ?)";
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, cat.getNom());
+            ps.setBigDecimal(2, cat.getPourcentageRemise());
+            ps.executeUpdate();
+            return null;
+        } catch (SQLException e) {
+            log.error("saveCategorie", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void delete(String id) {
+        String sql = "DELETE FROM client WHERE id = ?";
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            log.error("delete client", e);
+            throw new RuntimeException(e);
+        }
+    }
+
 
     // ── Helpers ──────────────────────────────────────────────────
     private void setClientParams(PreparedStatement ps, Client client) throws SQLException {
@@ -273,13 +308,15 @@ public class ClientDAO {
         cl.setNotes(rs.getString("notes"));
         Timestamp dc = rs.getTimestamp("date_creation");
         if (dc != null) cl.setDateCreation(dc.toLocalDateTime());
-        try {
-            Date dfd = rs.getDate("derniere_facture_date");
-            if (dfd != null) cl.setDerniereFactureDate(dfd.toLocalDate());
-        } catch (SQLException ignore) { /* colonne absente si appel depuis un autre contexte */ }
         // Catégorie
         String catId = rs.getString("cat_id");
-        if (catId != null) cl.setCategorie(new CategorieClient(catId, rs.getString("cat_nom")));
+        if (catId != null) {
+            CategorieClient cat = new CategorieClient(catId, rs.getString("cat_nom"));
+            try {
+                cat.setPourcentageRemise(rs.getBigDecimal("pourcentage_remise"));
+            } catch (SQLException ignore) {}
+            cl.setCategorie(cat);
+        }
         // Livreur
         String livId = rs.getString("liv_id");
         if (livId != null) {

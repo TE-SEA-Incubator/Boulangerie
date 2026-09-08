@@ -89,15 +89,66 @@ public class DatabaseInitializer {
         try (Connection c = DatabaseConnection.getInstance().getConnection();
              Statement st = c.createStatement()) {
             // Migration Produit: prix_unitaire
+            try { st.execute("ALTER TABLE produit ADD COLUMN prix_unitaire DECIMAL(15,2) NOT NULL DEFAULT 0"); } catch (Exception ignored) {}
+            // Migration Client: adresse, livreur_rattache, solde_precedent
+            try { st.execute("ALTER TABLE client ADD COLUMN adresse VARCHAR(255)"); } catch (Exception ignored) {}
+            try { st.execute("ALTER TABLE client ADD COLUMN livreur_rattache VARCHAR(36)"); } catch (Exception ignored) {}
+            try { st.execute("ALTER TABLE client ADD COLUMN solde_precedent DECIMAL(15,2) DEFAULT 0"); } catch (Exception ignored) {}
+            try { st.execute("UPDATE client SET adresse = ville WHERE (adresse IS NULL OR adresse = '') AND ville IS NOT NULL"); } catch (Exception ignored) {}
+            try { st.execute("ALTER TABLE categorie_client ADD COLUMN pourcentage_remise DECIMAL(5,2) DEFAULT 0"); } catch (Exception ignored) {}
+            try { st.execute("ALTER TABLE ligne_commande ADD COLUMN tarif_applicable DECIMAL(15,2) DEFAULT 0"); } catch (Exception ignored) {}
+            try { st.execute("ALTER TABLE ligne_commande ADD COLUMN remise_pct DECIMAL(5,2) DEFAULT 0"); } catch (Exception ignored) {}
+            try { st.execute("ALTER TABLE ligne_commande ADD COLUMN type_tarif VARCHAR(50) DEFAULT 'Standard'"); } catch (Exception ignored) {}
+            try { st.execute("UPDATE ligne_commande SET tarif_applicable = prix_unitaire WHERE tarif_applicable IS NULL OR tarif_applicable = 0"); } catch (Exception ignored) {}
             try {
-                st.execute("ALTER TABLE produit ADD COLUMN prix_unitaire DECIMAL(15,2) NOT NULL DEFAULT 0");
+                st.execute("""
+                    CREATE TABLE IF NOT EXISTS tarif_client (
+                        id          VARCHAR(36)    NOT NULL DEFAULT (UUID()) PRIMARY KEY,
+                        client_id   VARCHAR(36)    NOT NULL,
+                        produit_id  VARCHAR(36)    NOT NULL,
+                        prix        DECIMAL(15,2)  NOT NULL,
+                        date_debut  DATE           NOT NULL,
+                        date_fin    DATE,
+                        actif       TINYINT(1)     NOT NULL DEFAULT 1,
+                        FOREIGN KEY (client_id)  REFERENCES client(id),
+                        FOREIGN KEY (produit_id) REFERENCES produit(id)
+                    )""");
             } catch (Exception ignored) {}
-            // Migration Client: adresse
             try {
-                st.execute("ALTER TABLE client ADD COLUMN adresse VARCHAR(255)");
+                st.execute("""
+                    CREATE TABLE IF NOT EXISTS facture (
+                        id               VARCHAR(36)    NOT NULL DEFAULT (UUID()) PRIMARY KEY,
+                        numero           VARCHAR(20)    NOT NULL UNIQUE,
+                        date_emission    DATE           NOT NULL,
+                        client_id        VARCHAR(36),
+                        livreur_id       VARCHAR(36),
+                        montant_ht       DECIMAL(15,2)  NOT NULL DEFAULT 0,
+                        tva_pct          DECIMAL(5,2)   NOT NULL DEFAULT 0,
+                        tva_montant      DECIMAL(15,2)  NOT NULL DEFAULT 0,
+                        montant_ttc      DECIMAL(15,2)  NOT NULL DEFAULT 0,
+                        statut           VARCHAR(30)    NOT NULL DEFAULT 'En attente',
+                        est_verrouillee  TINYINT(1)     NOT NULL DEFAULT 0,
+                        est_annulee      TINYINT(1)     NOT NULL DEFAULT 0,
+                        fiche_id         VARCHAR(36),
+                        mode_reglement   VARCHAR(50),
+                        notes            TEXT,
+                        cree_par         VARCHAR(36),
+                        date_creation    DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )""");
             } catch (Exception ignored) {}
             try {
-                st.execute("UPDATE client SET adresse = ville WHERE (adresse IS NULL OR adresse = '') AND ville IS NOT NULL");
+                st.execute("""
+                    INSERT IGNORE INTO produit (id, code, libelle, unite, prix_vente, prix_unitaire, statut) VALUES
+                    (UUID(), 'PAI-40', '40', 'Pièce', 40.00, 40.00, 'Actif'),
+                    (UUID(), 'PAI-80', '80', 'Pièce', 80.00, 80.00, 'Actif'),
+                    (UUID(), 'PAI-100', '100', 'Pièce', 100.00, 100.00, 'Actif'),
+                    (UUID(), 'PAI-125', '125', 'Pièce', 125.00, 125.00, 'Actif'),
+                    (UUID(), 'PAI-160', '160', 'Pièce', 160.00, 160.00, 'Actif'),
+                    (UUID(), 'PAI-EXTRA', 'EXTRA', 'Pièce', 200.00, 200.00, 'Actif'),
+                    (UUID(), 'PJ-80', 'PJ 80', 'Pièce', 80.00, 80.00, 'Actif'),
+                    (UUID(), 'PJ-100', 'PJ 100', 'Pièce', 100.00, 100.00, 'Actif'),
+                    (UUID(), 'S-VIDE', 'S.VIDE', 'Pièce', 0.00, 0.00, 'Actif')
+                """);
             } catch (Exception ignored) {}
             log.info("Migrations automatiques appliquées avec succès.");
         } catch (Exception e) {

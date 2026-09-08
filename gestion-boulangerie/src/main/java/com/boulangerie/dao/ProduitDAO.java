@@ -172,6 +172,18 @@ public class ProduitDAO {
     }
 
     // ── Tarifs ────────────────────────────────────────────────────
+    public void delete(String id) {
+        String sql = "UPDATE produit SET statut='Inactif' WHERE id = ?";
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            log.error("delete produit", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     public List<Tarif> findTarifs(String produitId) {
         try (Connection c = db.getConnection()) {
             return findTarifs(produitId, c);

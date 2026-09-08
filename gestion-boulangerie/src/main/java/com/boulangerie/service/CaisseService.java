@@ -7,11 +7,14 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class CaisseService {
     private static final Logger log = LoggerFactory.getLogger(CaisseService.class);
     private final VersementDAO versementDAO = new VersementDAO();
-    private final FactureDAO   factureDAO   = new FactureDAO();
     private final ClientDAO    clientDAO    = new ClientDAO();
     private final AuditDAO     auditDAO     = new AuditDAO();
     private final SessionService session    = SessionService.getInstance();
@@ -23,24 +26,23 @@ public class CaisseService {
     public Versement enregistrerVersement(Versement v) {
         if (!session.hasPermission("CAISSE_WRITE")) throw new SecurityException("Permission refusée : CAISSE_WRITE");
         if (v == null || v.getMontantAttendu() == null || v.getMontantRemis() == null
-                || v.getMontantEnregistre() == null || v.getDateVersement() == null) {
+                || v.getDateVersement() == null) {
             throw new IllegalArgumentException("Les montants et la date du versement sont obligatoires.");
         }
-        if (v.getMontantAttendu().signum() < 0 || v.getMontantRemis().signum() < 0
-                || v.getMontantEnregistre().signum() < 0) {
+        if (v.getMontantAttendu().signum() < 0 || v.getMontantRemis().signum() < 0) {
             throw new IllegalArgumentException("Les montants d'un versement ne peuvent pas être négatifs.");
         }
 
-        BigDecimal ecart = v.getMontantRemis().subtract(v.getMontantEnregistre());
+        BigDecimal ecart = v.getMontantRemis().subtract(v.getMontantAttendu());
         if (ecart.compareTo(BigDecimal.ZERO) != 0
                 && (v.getMotifEcart() == null || v.getMotifEcart().isBlank())) {
             throw new IllegalArgumentException("Un motif est obligatoire pour tout écart de caisse.");
         }
 
         // Déterminer le statut
-        if (v.getMontantEnregistre().compareTo(v.getMontantAttendu()) >= 0) {
+        if (v.getMontantRemis().compareTo(v.getMontantAttendu()) >= 0) {
             v.setStatut(Versement.Statut.Payé);
-        } else if (v.getMontantEnregistre().compareTo(BigDecimal.ZERO) > 0) {
+        } else if (v.getMontantRemis().compareTo(BigDecimal.ZERO) > 0) {
             v.setStatut(Versement.Statut.Partiel);
         } else {
             v.setStatut(Versement.Statut.EnAttente);
@@ -52,28 +54,14 @@ public class CaisseService {
         // Mettre à jour le solde client
         if (v.getClient() != null) {
             clientDAO.findById(v.getClient().getId()).ifPresent(cl -> {
-                BigDecimal nouveauSolde = cl.getSoldeActuel().subtract(v.getMontantEnregistre());
+                BigDecimal nouveauSolde = cl.getSoldeActuel().subtract(v.getMontantRemis());
                 clientDAO.updateSolde(cl.getId(), nouveauSolde);
-            });
-        }
-
-        // Mettre à jour le statut de la facture
-        if (v.getFacture() != null) {
-            factureDAO.findById(v.getFacture().getId()).ifPresent(f -> {
-                BigDecimal totalVerse = versementDAO.findByFacture(f.getId()).stream()
-                    .map(Versement::getMontantEnregistre).reduce(BigDecimal.ZERO, BigDecimal::add);
-                if (totalVerse.compareTo(f.getMontantTtc()) >= 0) {
-                    factureDAO.updateStatut(f.getId(), Facture.Statut.Payée);
-                } else if (totalVerse.compareTo(BigDecimal.ZERO) > 0) {
-                    factureDAO.updateStatut(f.getId(), Facture.Statut.Partielle);
-                }
             });
         }
 
         // Journaliser
         String details = "Versement " + v.getNumero() + " | Attendu=" + v.getMontantAttendu()
-            + " Remis=" + v.getMontantRemis() + " Enregistré=" + v.getMontantEnregistre()
-            + " Écart=" + ecart;
+            + " Remis=" + v.getMontantRemis() + " Écart=" + ecart;
         if (ecart.compareTo(BigDecimal.ZERO) != 0) {
             auditDAO.log(new JournalAudit("Versement", versementId, JournalAudit.ECART,
                 session.getUserId(), session.getLogin(), details + " Motif: " + v.getMotifEcart()));
@@ -108,7 +96,7 @@ public class CaisseService {
         cl.setDateCloture(date);
         cl.setMontantAttendu(versementDAO.getMontantAttenduJour(date));
         cl.setMontantRemis(versementDAO.getMontantRemisJour(date));
-        cl.setMontantEnregistre(versementDAO.getMontantEnregistreJour(date));
+        cl.setMontantEnregistre(versementDAO.getMontantRemisJour(date)); // Compatibilité model
         cl.setMotifEcart(motifEcart);
         cl.calculerTaux();
 
@@ -117,8 +105,7 @@ public class CaisseService {
             throw new IllegalArgumentException("Un motif est obligatoire lorsqu'un écart de clôture existe.");
         }
 
-        BigDecimal totalSoldesClients = BigDecimal.ZERO; // simplifié; peut être calculé depuis solde_client
-        cl.setSoldeCloture(cl.getMontantEnregistre().subtract(cl.getMontantAttendu()));
+        cl.setSoldeCloture(cl.getMontantRemis().subtract(cl.getMontantAttendu()));
         cl.setValideParId(session.getUserId());
         versementDAO.saveClotureJournaliere(cl);
 
@@ -133,13 +120,13 @@ public class CaisseService {
      * Charge les données de la feuille de caisse / facturation journalière
      * consolidant les sorties, montants attendus, soldes précédents et versements.
      */
-    public java.util.List<FicheCaisseLigne> chargerFicheCaisseJournaliere(LocalDate date) {
+    public List<FicheCaisseLigne> chargerFicheCaisseJournaliere(LocalDate date) {
         FicheJournaliereDAO ficheDAO = new FicheJournaliereDAO();
-        java.util.List<LigneCommande> sorties = ficheDAO.findLignesByDate(date);
-        java.util.List<Versement> versements = versementDAO.findByDate(date);
-        java.util.List<Client> clients = clientDAO.findAll();
+        List<LigneCommande> sorties = ficheDAO.findLignesByDate(date);
+        List<Versement> versements = versementDAO.findByDate(date);
+        List<Client> clients = clientDAO.findAll();
 
-        java.util.Map<String, FicheCaisseLigne> map = new java.util.LinkedHashMap<>();
+        Map<String, FicheCaisseLigne> map = new LinkedHashMap<>();
 
         // 1. Agréger les sorties par client
         for (LigneCommande ls : sorties) {
@@ -169,7 +156,7 @@ public class CaisseService {
             }
         }
 
-        return new java.util.ArrayList<>(map.values());
+        return new ArrayList<>(map.values());
     }
 
     /**
