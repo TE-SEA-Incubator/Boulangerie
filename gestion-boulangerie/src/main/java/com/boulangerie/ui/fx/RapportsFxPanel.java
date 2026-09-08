@@ -222,7 +222,7 @@ public class RapportsFxPanel extends FxPanelBase {
 
         runAsync(() -> {
             if ("Fiche Journalière des Sorties & Retours".equals(type)) {
-                List<LigneSortie> sorties = ficheDAO.findLignesByDate(date);
+                List<LigneCommande> sorties = ficheDAO.findLignesByDate(date);
                 return new Object[]{"SORTIES", sorties};
             } else if ("Feuille de Facturation & Caisse Journalière".equals(type)) {
                 List<FicheCaisseLigne> caisse = caisseService.chargerFicheCaisseJournaliere(date);
@@ -248,11 +248,11 @@ public class RapportsFxPanel extends FxPanelBase {
     private void configurerColonnesApercu(String type, Object dataObj) {
         switch (type) {
             case "SORTIES" -> {
-                List<LigneSortie> sorties = (List<LigneSortie>) dataObj;
+                List<LigneCommande> sorties = (List<LigneCommande>) dataObj;
                 ajouterColonnesApercu("N°", "Client / Livreur", "Produit", "Sorties", "Retours", "Net", "Total HT");
                 int idx = 1;
                 BigDecimal total = BigDecimal.ZERO;
-                for (LigneSortie s : sorties) {
+                for (LigneCommande s : sorties) {
                     dataApercu.add(FXCollections.observableArrayList(
                         String.valueOf(idx++),
                         s.getClient() != null ? s.getClient().getNom() : "—",
@@ -364,7 +364,7 @@ public class RapportsFxPanel extends FxPanelBase {
 
         runAsync(() -> {
             if ("Fiche Journalière des Sorties & Retours".equals(type)) {
-                List<LigneSortie> sorties = ficheDAO.findLignesByDate(date);
+                List<LigneCommande> sorties = ficheDAO.findLignesByDate(date);
                 PdfService.exporterFicheSortie(date, sorties, f.getAbsolutePath());
             } else if ("Feuille de Facturation & Caisse Journalière".equals(type)) {
                 List<FicheCaisseLigne> caisse = caisseService.chargerFicheCaisseJournaliere(date);
@@ -392,13 +392,13 @@ public class RapportsFxPanel extends FxPanelBase {
 
         runAsync(() -> {
             if ("Fiche Journalière des Sorties & Retours".equals(type)) {
-                List<LigneSortie> sorties = ficheDAO.findLignesByDate(date);
+                List<LigneCommande> sorties = ficheDAO.findLignesByDate(date);
                 ExcelExportService.exporterFicheSortieExcel(date, sorties, f);
             } else if ("Feuille de Facturation & Caisse Journalière".equals(type)) {
                 List<FicheCaisseLigne> caisse = caisseService.chargerFicheCaisseJournaliere(date);
                 ExcelExportService.exporterFicheCaisseExcel(date, caisse, f);
             } else {
-                List<LigneSortie> sorties = ficheDAO.findLignesByDate(date);
+                List<LigneCommande> sorties = ficheDAO.findLignesByDate(date);
                 ExcelExportService.exporterFicheSortieExcel(date, sorties, f);
             }
             return true;

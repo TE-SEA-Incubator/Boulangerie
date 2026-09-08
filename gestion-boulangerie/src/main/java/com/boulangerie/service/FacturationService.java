@@ -38,21 +38,21 @@ public class FacturationService {
             throw new IllegalStateException("Impossible de facturer une fiche sans ligne de sortie.");
         }
         // Regrouper les lignes par client
-        Map<String, List<LigneSortie>> parClient = new LinkedHashMap<>();
-        for (LigneSortie l : fiche.getLignes()) {
+        Map<String, List<LigneCommande>> parClient = new LinkedHashMap<>();
+        for (LigneCommande l : fiche.getLignes()) {
             parClient.computeIfAbsent(l.getClient().getId(), k -> new ArrayList<>()).add(l);
         }
 
         List<Facture> factures = new ArrayList<>();
-        for (Map.Entry<String, List<LigneSortie>> entry : parClient.entrySet()) {
+        for (Map.Entry<String, List<LigneCommande>> entry : parClient.entrySet()) {
             String clientId = entry.getKey();
-            List<LigneSortie> lignes = entry.getValue();
+            List<LigneCommande> lignes = entry.getValue();
             Optional<Client> opt = clientDAO.findById(clientId);
             if (opt.isEmpty()) continue;
             Client client = opt.get();
 
             BigDecimal totalHt = lignes.stream()
-                .map(LigneSortie::getMontantHt)
+                .map(LigneCommande::getMontantHt)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             if (totalHt.compareTo(BigDecimal.ZERO) == 0) continue;

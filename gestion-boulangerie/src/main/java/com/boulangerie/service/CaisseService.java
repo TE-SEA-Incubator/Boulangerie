@@ -135,14 +135,14 @@ public class CaisseService {
      */
     public java.util.List<FicheCaisseLigne> chargerFicheCaisseJournaliere(LocalDate date) {
         FicheJournaliereDAO ficheDAO = new FicheJournaliereDAO();
-        java.util.List<LigneSortie> sorties = ficheDAO.findLignesByDate(date);
+        java.util.List<LigneCommande> sorties = ficheDAO.findLignesByDate(date);
         java.util.List<Versement> versements = versementDAO.findByDate(date);
         java.util.List<Client> clients = clientDAO.findAll();
 
         java.util.Map<String, FicheCaisseLigne> map = new java.util.LinkedHashMap<>();
 
         // 1. Agréger les sorties par client
-        for (LigneSortie ls : sorties) {
+        for (LigneCommande ls : sorties) {
             if (ls.getClient() == null) continue;
             String clId = ls.getClient().getId();
             FicheCaisseLigne ligne = map.computeIfAbsent(clId, id -> new FicheCaisseLigne(ls.getClient()));

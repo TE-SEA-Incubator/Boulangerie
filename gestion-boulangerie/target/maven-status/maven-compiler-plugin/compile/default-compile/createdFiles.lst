@@ -70,7 +70,6 @@ com/boulangerie/dao/FactureDAO.class
 com/boulangerie/service/AuthService.class
 com/boulangerie/model/Versement$Statut.class
 com/boulangerie/ui/dialogs/ProduitDialog.class
-com/boulangerie/model/LigneSortie.class
 com/boulangerie/ui/fx/ClientsFxPanel.class
 com/boulangerie/model/RemiseExceptionnelle.class
 com/boulangerie/ui/components/KpiCard$1.class
@@ -161,6 +160,7 @@ com/boulangerie/ui/panels/SortiesPanel.class
 com/boulangerie/service/TarifService.class
 com/boulangerie/model/Permission.class
 com/boulangerie/model/Client$TypeClient.class
+com/boulangerie/model/LigneCommande.class
 com/boulangerie/ui/components/RoundedButton$1.class
 com/boulangerie/model/Avoir.class
 com/boulangerie/ui/fx/DashboardFxPanel$DashData.class

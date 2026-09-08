@@ -297,7 +297,7 @@ public class SaisieDialog extends JDialog {
     // ── Logique métier ────────────────────────────────────────────
     private void chargerLignesExistantes() {
         lignesModel.setRowCount(0);
-        for (LigneSortie l : fiche.getLignes()) appendLigneDansTable(l);
+        for (LigneCommande l : fiche.getLignes()) appendLigneDansTable(l);
         recalculerTotaux();
     }
 
@@ -417,7 +417,7 @@ public class SaisieDialog extends JDialog {
             tr = new TarifService.TarifResolu(BigDecimal.ZERO, "Standard", BigDecimal.ZERO, BigDecimal.ZERO, null);
         }
 
-        LigneSortie l = new LigneSortie();
+        LigneCommande l = new LigneCommande();
         l.setFicheId(fiche.getId());
         l.setClient(cl);
         l.setProduit(pr);
@@ -444,7 +444,7 @@ public class SaisieDialog extends JDialog {
         txtRemisePct.setText("0");
     }
 
-    private void appendLigneDansTable(LigneSortie l) {
+    private void appendLigneDansTable(LigneCommande l) {
         String statut = l.getClient() != null
             ? l.getClient().getStatut() != null ? l.getClient().getStatut().name() : "Actif"
             : "—";
@@ -469,7 +469,7 @@ public class SaisieDialog extends JDialog {
         int confirm = JOptionPane.showConfirmDialog(this,
             "Supprimer cette ligne de sortie ?", "Suppression", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) return;
-        LigneSortie l = fiche.getLignes().get(row);
+        LigneCommande l = fiche.getLignes().get(row);
         if (l.getId() != null) ficheDAO.deleteLigne(l.getId());
         fiche.getLignes().remove(row);
         lignesModel.removeRow(row);

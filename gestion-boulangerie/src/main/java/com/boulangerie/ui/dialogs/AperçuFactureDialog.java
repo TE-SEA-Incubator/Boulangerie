@@ -20,7 +20,7 @@ import java.util.List;
 public class AperçuFactureDialog extends JDialog {
 
     private final Facture facture;
-    private List<LigneSortie> lignes;
+    private List<LigneCommande> lignes;
 
     public AperçuFactureDialog(Frame parent, Facture facture) {
         super(parent, "Facture — Aperçu avant impression", true);

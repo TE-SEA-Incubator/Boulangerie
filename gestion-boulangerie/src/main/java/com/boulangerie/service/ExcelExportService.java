@@ -1,7 +1,7 @@
 package com.boulangerie.service;
 
 import com.boulangerie.model.FicheCaisseLigne;
-import com.boulangerie.model.LigneSortie;
+import com.boulangerie.model.LigneCommande;
 import com.boulangerie.util.FormatUtil;
 
 import java.io.BufferedWriter;
@@ -18,7 +18,7 @@ import java.util.List;
  */
 public class ExcelExportService {
 
-    public static void exporterFicheSortieExcel(LocalDate date, List<LigneSortie> lignes, File fichier) throws Exception {
+    public static void exporterFicheSortieExcel(LocalDate date, List<LigneCommande> lignes, File fichier) throws Exception {
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fichier), StandardCharsets.UTF_8))) {
             // BOM UTF-8 pour ouverture directe sous Excel avec accents corrects
             writer.write("\uFEFF");
@@ -33,7 +33,7 @@ public class ExcelExportService {
             int totalNet = 0;
             java.math.BigDecimal totalMontant = java.math.BigDecimal.ZERO;
 
-            for (LigneSortie l : lignes) {
+            for (LigneCommande l : lignes) {
                 String clNom = l.getClient() != null ? l.getClient().getNom() : "";
                 String prodLib = l.getProduit() != null ? l.getProduit().getLibelle() : "";
                 writer.write(idx++ + ";"

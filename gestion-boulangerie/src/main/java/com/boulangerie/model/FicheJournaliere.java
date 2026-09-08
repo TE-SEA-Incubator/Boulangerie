@@ -20,7 +20,7 @@ public class FicheJournaliere {
     private String creePar;
     private LocalDateTime dateCreation;
     private LocalDateTime dateCloture;
-    private List<LigneSortie> lignes = new ArrayList<>();
+    private List<LigneCommande> lignes = new ArrayList<>();
 
     public FicheJournaliere() {
         this.statut       = Statut.Brouillon;
@@ -51,13 +51,13 @@ public class FicheJournaliere {
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
     public LocalDateTime getDateCloture() { return dateCloture; }
     public void setDateCloture(LocalDateTime dateCloture) { this.dateCloture = dateCloture; }
-    public List<LigneSortie> getLignes() { return lignes; }
-    public void setLignes(List<LigneSortie> lignes) { this.lignes = lignes; }
+    public List<LigneCommande> getLignes() { return lignes; }
+    public void setLignes(List<LigneCommande> lignes) { this.lignes = lignes; }
 
     public void recalculerTotaux() {
         totalSorties = BigDecimal.ZERO;
         totalRetours = BigDecimal.ZERO;
-        for (LigneSortie l : lignes) {
+        for (LigneCommande l : lignes) {
             BigDecimal montantSortie  = l.getTarifApplicable().multiply(BigDecimal.valueOf(l.getQuantiteSortie()));
             BigDecimal montantRetour  = l.getTarifApplicable().multiply(BigDecimal.valueOf(l.getQuantiteRetournee()));
             totalSorties = totalSorties.add(montantSortie);

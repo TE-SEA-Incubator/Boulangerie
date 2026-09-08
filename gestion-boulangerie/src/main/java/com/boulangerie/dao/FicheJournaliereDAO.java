@@ -135,9 +135,9 @@ public class FicheJournaliereDAO {
     }
 
     // ── Lignes de sortie ─────────────────────────────────────────
-    public String saveLigne(LigneSortie l) {
+    public String saveLigne(LigneCommande l) {
         String sql = """
-            INSERT INTO ligne_sortie (id,fiche_id,client_id,produit_id,quantite_sortie,
+            INSERT INTO ligne_commande (id,fiche_id,client_id,produit_id,quantite_sortie,
             quantite_retournee,tarif_applicable,type_tarif,remise_pct,montant_ht,motif_retour)
             VALUES (UUID(),?,?,?,?,?,?,?,?,?,?)
             """;
@@ -161,9 +161,9 @@ public class FicheJournaliereDAO {
         }
     }
 
-    public void updateLigne(LigneSortie l) {
+    public void updateLigne(LigneCommande l) {
         String sql = """
-            UPDATE ligne_sortie SET quantite_sortie=?,quantite_retournee=?,
+            UPDATE ligne_commande SET quantite_sortie=?,quantite_retournee=?,
             tarif_applicable=?,remise_pct=?,montant_ht=?,motif_retour=? WHERE id=?
             """;
         try (Connection c = db.getConnection();
@@ -184,7 +184,7 @@ public class FicheJournaliereDAO {
 
     public void deleteLigne(String ligneId) {
         try (Connection c = db.getConnection();
-             PreparedStatement ps = c.prepareStatement("DELETE FROM ligne_sortie WHERE id=?")) {
+             PreparedStatement ps = c.prepareStatement("DELETE FROM ligne_commande WHERE id=?")) {
             ps.setString(1, ligneId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -193,15 +193,15 @@ public class FicheJournaliereDAO {
         }
     }
 
-    public List<LigneSortie> findLignesByDate(LocalDate date) {
-        List<LigneSortie> list = new ArrayList<>();
+    public List<LigneCommande> findLignesByDate(LocalDate date) {
+        List<LigneCommande> list = new ArrayList<>();
         String sql = """
             SELECT ls.*,
                    cl.id AS cl_id, cl.code AS cl_code, cl.nom AS cl_nom, cl.adresse AS cl_adr, cl.solde_actuel AS cl_solde,
                    p.id AS p_id, p.code AS p_code, p.libelle AS p_lib, p.prix_unitaire AS p_prix,
                    fj.id AS fj_id, fj.numero AS fj_num, fj.date_fiche AS fj_date,
                    u.id AS liv_id, u.nom_complet AS liv_nom
-            FROM ligne_sortie ls
+            FROM ligne_commande ls
             JOIN fiche_journaliere fj ON ls.fiche_id = fj.id
             JOIN client cl ON ls.client_id = cl.id
             JOIN produit p ON ls.produit_id = p.id
@@ -214,7 +214,7 @@ public class FicheJournaliereDAO {
             ps.setDate(1, java.sql.Date.valueOf(date));
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                LigneSortie l = new LigneSortie();
+                LigneCommande l = new LigneCommande();
                 l.setId(rs.getString("id"));
                 l.setFicheId(rs.getString("fiche_id"));
                 l.setQuantiteSortie(rs.getInt("quantite_sortie"));
@@ -273,9 +273,9 @@ public class FicheJournaliereDAO {
     public void recalculerTotauxFiche(String ficheId) {
         String sql = """
             UPDATE fiche_journaliere
-            SET total_sorties = COALESCE((SELECT SUM(quantite_sortie * tarif_applicable) FROM ligne_sortie WHERE fiche_id=?), 0),
-                total_retours = COALESCE((SELECT SUM(quantite_retournee * tarif_applicable) FROM ligne_sortie WHERE fiche_id=?), 0),
-                total_net     = COALESCE((SELECT SUM(montant_ht) FROM ligne_sortie WHERE fiche_id=?), 0)
+            SET total_sorties = COALESCE((SELECT SUM(quantite_sortie * tarif_applicable) FROM ligne_commande WHERE fiche_id=?), 0),
+                total_retours = COALESCE((SELECT SUM(quantite_retournee * tarif_applicable) FROM ligne_commande WHERE fiche_id=?), 0),
+                total_net     = COALESCE((SELECT SUM(montant_ht) FROM ligne_commande WHERE fiche_id=?), 0)
             WHERE id=?
             """;
         try (Connection c = db.getConnection();
@@ -305,13 +305,13 @@ public class FicheJournaliereDAO {
     }
 
     // ── Helpers ──────────────────────────────────────────────────
-    private List<LigneSortie> findLignes(String ficheId, Connection c) throws SQLException {
-        List<LigneSortie> list = new ArrayList<>();
+    private List<LigneCommande> findLignes(String ficheId, Connection c) throws SQLException {
+        List<LigneCommande> list = new ArrayList<>();
         String sql = """
             SELECT ls.*,
                    cl.id AS cl_id, cl.code AS cl_code, cl.nom AS cl_nom,
                    p.id AS p_id, p.code AS p_code, p.libelle AS p_lib
-            FROM ligne_sortie ls
+            FROM ligne_commande ls
             JOIN client cl ON ls.client_id = cl.id
             JOIN produit p ON ls.produit_id = p.id
             WHERE ls.fiche_id=?
@@ -320,7 +320,7 @@ public class FicheJournaliereDAO {
             ps.setString(1, ficheId);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                LigneSortie l = new LigneSortie();
+                LigneCommande l = new LigneCommande();
                 l.setId(rs.getString("id"));
                 l.setFicheId(ficheId);
                 l.setQuantiteSortie(rs.getInt("quantite_sortie"));

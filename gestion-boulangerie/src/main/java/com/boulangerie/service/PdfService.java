@@ -39,7 +39,7 @@ public class PdfService {
     private static final DeviceRgb MARRON     = new DeviceRgb(0x6B, 0x3A, 0x2A);
 
     // ── Facture individuelle ─────────────────────────────────────
-    public static void exporterFacture(Facture facture, List<LigneSortie> lignes, String cheminPdf) throws Exception {
+    public static void exporterFacture(Facture facture, List<LigneCommande> lignes, String cheminPdf) throws Exception {
         try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(cheminPdf));
              Document doc = new Document(pdfDoc, PageSize.A4)) {
 
@@ -93,7 +93,7 @@ public class PdfService {
 
             // Lignes filtrées pour ce client
             if (lignes != null) {
-                for (LigneSortie l : lignes) {
+                for (LigneCommande l : lignes) {
                     if (facture.getClient() != null && l.getClient() != null
                             && !facture.getClient().getId().equals(l.getClient().getId())) continue;
                     if (l.getQuantiteNette() == 0) continue;
@@ -401,7 +401,7 @@ public class PdfService {
     }
 
     // ── Fiche de Sortie Journalière (conforme modèle Excel/Docx) ──
-    public static void exporterFicheSortie(LocalDate date, List<LigneSortie> lignes, String cheminPdf) throws Exception {
+    public static void exporterFicheSortie(LocalDate date, List<LigneCommande> lignes, String cheminPdf) throws Exception {
         try (PdfDocument pdfDoc = new PdfDocument(new PdfWriter(cheminPdf));
              Document doc = new Document(pdfDoc, PageSize.A4.rotate())) {
 
@@ -426,7 +426,7 @@ public class PdfService {
             java.math.BigDecimal totalMontant = java.math.BigDecimal.ZERO;
 
             int idx = 1;
-            for (LigneSortie l : lignes) {
+            for (LigneCommande l : lignes) {
                 table.addCell(dataCell(String.valueOf(idx++), fontNorm));
                 table.addCell(dataCell(l.getClient() != null ? l.getClient().getNom() : "—", fontBold));
                 table.addCell(dataCell(l.getProduit() != null ? l.getProduit().getLibelle() : "—", fontNorm));

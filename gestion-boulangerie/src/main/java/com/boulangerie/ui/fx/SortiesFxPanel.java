@@ -5,7 +5,7 @@ import com.boulangerie.dao.FicheJournaliereDAO;
 import com.boulangerie.dao.ProduitDAO;
 import com.boulangerie.model.Client;
 import com.boulangerie.model.FicheJournaliere;
-import com.boulangerie.model.LigneSortie;
+import com.boulangerie.model.LigneCommande;
 import com.boulangerie.model.Produit;
 import com.boulangerie.service.ExcelExportService;
 import com.boulangerie.service.PdfService;
@@ -40,9 +40,9 @@ public class SortiesFxPanel extends FxPanelBase {
 
     private DatePicker dpDate;
     private TextField txtRecherche;
-    private TableView<LigneSortie> table;
-    private ObservableList<LigneSortie> data = FXCollections.observableArrayList();
-    private List<LigneSortie> allLignes = List.of();
+    private TableView<LigneCommande> table;
+    private ObservableList<LigneCommande> data = FXCollections.observableArrayList();
+    private List<LigneCommande> allLignes = List.of();
 
     private Label lblTotalSorties, lblTotalRetours, lblTotalNettes, lblMontantTotal;
 
@@ -86,14 +86,14 @@ public class SortiesFxPanel extends FxPanelBase {
         table = styledTable();
         table.setItems(data);
 
-        TableColumn<LigneSortie, String> colClient = new TableColumn<>("Client / Livreur");
-        TableColumn<LigneSortie, String> colProduit = new TableColumn<>("Désignation Produit");
-        TableColumn<LigneSortie, String> colQteSort = new TableColumn<>("Qté sortie");
-        TableColumn<LigneSortie, String> colQteRet = new TableColumn<>("Qté retour");
-        TableColumn<LigneSortie, String> colQteNet = new TableColumn<>("Qté nette");
-        TableColumn<LigneSortie, String> colPrix = new TableColumn<>("Prix unitaire");
-        TableColumn<LigneSortie, String> colTotal = new TableColumn<>("Total HT");
-        TableColumn<LigneSortie, Void> colActions = new TableColumn<>("Actions");
+        TableColumn<LigneCommande, String> colClient = new TableColumn<>("Client / Livreur");
+        TableColumn<LigneCommande, String> colProduit = new TableColumn<>("Désignation Produit");
+        TableColumn<LigneCommande, String> colQteSort = new TableColumn<>("Qté sortie");
+        TableColumn<LigneCommande, String> colQteRet = new TableColumn<>("Qté retour");
+        TableColumn<LigneCommande, String> colQteNet = new TableColumn<>("Qté nette");
+        TableColumn<LigneCommande, String> colPrix = new TableColumn<>("Prix unitaire");
+        TableColumn<LigneCommande, String> colTotal = new TableColumn<>("Total HT");
+        TableColumn<LigneCommande, Void> colActions = new TableColumn<>("Actions");
 
         colClient.setCellValueFactory(d -> new SimpleStringProperty(
             d.getValue().getClient() != null ? d.getValue().getClient().getNom() : "—"));
@@ -136,11 +136,11 @@ public class SortiesFxPanel extends FxPanelBase {
                 box.setAlignment(Pos.CENTER);
 
                 btnModif.setOnAction(e -> {
-                    LigneSortie l = getTableView().getItems().get(getIndex());
+                    LigneCommande l = getTableView().getItems().get(getIndex());
                     ouvrirFormulaireSortie(l);
                 });
                 btnSuppr.setOnAction(e -> {
-                    LigneSortie l = getTableView().getItems().get(getIndex());
+                    LigneCommande l = getTableView().getItems().get(getIndex());
                     supprimerLigne(l);
                 });
             }
@@ -194,7 +194,7 @@ public class SortiesFxPanel extends FxPanelBase {
 
     private void filtrer() {
         String filter = txtRecherche.getText() != null ? txtRecherche.getText().trim().toLowerCase() : "";
-        List<LigneSortie> filtered = allLignes.stream().filter(l -> {
+        List<LigneCommande> filtered = allLignes.stream().filter(l -> {
             if (filter.isEmpty()) return true;
             String cl = l.getClient() != null ? l.getClient().getNom().toLowerCase() : "";
             String pr = l.getProduit() != null ? l.getProduit().getLibelle().toLowerCase() : "";
@@ -208,7 +208,7 @@ public class SortiesFxPanel extends FxPanelBase {
         int totalNet = 0;
         BigDecimal montantTot = BigDecimal.ZERO;
 
-        for (LigneSortie l : filtered) {
+        for (LigneCommande l : filtered) {
             totalSort += l.getQuantiteSortie();
             totalRet += l.getQuantiteRetournee();
             totalNet += l.getQuantiteNette();
@@ -230,7 +230,7 @@ public class SortiesFxPanel extends FxPanelBase {
         TextField txtMotif;
     }
 
-    private void ouvrirFormulaireSortie(LigneSortie existante) {
+    private void ouvrirFormulaireSortie(LigneCommande existante) {
         final FormComponents fc = new FormComponents();
 
         Dialog<Boolean> dlg = new Dialog<>();
@@ -338,10 +338,10 @@ public class SortiesFxPanel extends FxPanelBase {
         dlg.showAndWait().ifPresent(ok -> handleFormSubmit(ok, existante, finalFc));
     }
 
-    private void handleFormSubmit(boolean ok, LigneSortie existante, FormComponents fc) {
+    private void handleFormSubmit(boolean ok, LigneCommande existante, FormComponents fc) {
         if (!ok) return;
 
-        final LigneSortie fExistante = existante;
+        final LigneCommande fExistante = existante;
         final ComboBox<Client> fCboClient = fc.cboClient;
         final ComboBox<Produit> fCboProduit = fc.cboProduit;
         final Spinner<Integer> fSpnSortie = fc.spnSortie;
@@ -375,7 +375,7 @@ public class SortiesFxPanel extends FxPanelBase {
         runAsync(() -> {
             FicheJournaliere fj = ficheDAO.getOrCreateFicheJour(dateFiche, null, session.getUserId());
             if (fExistante == null) {
-                LigneSortie l = new LigneSortie();
+                LigneCommande l = new LigneCommande();
                 l.setFicheId(fj.getId());
                 l.setClient(cl);
                 l.setProduit(pr);
@@ -402,7 +402,7 @@ public class SortiesFxPanel extends FxPanelBase {
         });
     }
 
-    private void supprimerLigne(LigneSortie ligne) {
+    private void supprimerLigne(LigneCommande ligne) {
         Alert conf = new Alert(Alert.AlertType.CONFIRMATION,
             "Voulez-vous supprimer cette sortie pour " + (ligne.getClient() != null ? ligne.getClient().getNom() : "") + " ?");
         conf.setTitle("Confirmation");

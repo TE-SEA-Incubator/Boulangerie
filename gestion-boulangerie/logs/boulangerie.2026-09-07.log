@@ -1,0 +1,46 @@
+2026-09-07 11:48:24 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-07 11:48:24 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — vérification des migrations nécessaires...
+2026-09-07 11:48:24 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Migrations automatiques appliquées avec succès.
+2026-09-07 11:48:25 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-07 11:48:40 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-07 11:54:14 [fx-panel-worker] ERROR c.b.dao.FicheJournaliereDAO - save fiche
+java.sql.SQLException: Data truncated for column 'statut' at row 1
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:130)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.FicheJournaliereDAO.save(FicheJournaliereDAO.java:101)
+	at com.boulangerie.dao.FicheJournaliereDAO.getOrCreateFicheJour(FicheJournaliereDAO.java:268)
+	at com.boulangerie.ui.fx.SortiesFxPanel.lambda$handleFormSubmit$27(SortiesFxPanel.java:376)
+	at com.boulangerie.ui.fx.FxPanelBase.lambda$runAsync$3(FxPanelBase.java:211)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-07 11:54:30 [fx-panel-worker] ERROR c.b.dao.FicheJournaliereDAO - save fiche
+java.sql.SQLException: Data truncated for column 'statut' at row 1
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:130)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.FicheJournaliereDAO.save(FicheJournaliereDAO.java:101)
+	at com.boulangerie.dao.FicheJournaliereDAO.getOrCreateFicheJour(FicheJournaliereDAO.java:268)
+	at com.boulangerie.ui.fx.SortiesFxPanel.lambda$handleFormSubmit$27(SortiesFxPanel.java:376)
+	at com.boulangerie.ui.fx.FxPanelBase.lambda$runAsync$3(FxPanelBase.java:211)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-07 12:03:04 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-07 12:03:04 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — vérification des migrations nécessaires...
+2026-09-07 12:03:04 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Migrations automatiques appliquées avec succès.
+2026-09-07 12:03:05 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-07 12:03:45 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)

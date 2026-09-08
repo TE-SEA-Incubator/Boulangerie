@@ -56,7 +56,7 @@ public class PrevisionService {
                    SUM(ls.quantite_sortie) AS sum_sorties,
                    SUM(ls.quantite_retournee) AS sum_retours,
                    SUM(ls.montant_ht) AS sum_ca
-            FROM ligne_sortie ls
+            FROM ligne_commande ls
             JOIN fiche_journaliere fj ON ls.fiche_id = fj.id
             WHERE fj.date_fiche >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
             GROUP BY ls.produit_id

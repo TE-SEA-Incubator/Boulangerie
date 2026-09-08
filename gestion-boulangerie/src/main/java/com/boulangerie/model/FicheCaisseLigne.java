@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class FicheCaisseLigne {
     private Client client;
-    private final List<LigneSortie> sorties = new ArrayList<>();
+    private final List<LigneCommande> sorties = new ArrayList<>();
     private String resumeSorties = "";
     private int totalQuantite = 0;
     private BigDecimal montantFacture = BigDecimal.ZERO;  // Sorties du jour (Montant Attendu)
@@ -32,7 +32,7 @@ public class FicheCaisseLigne {
         recalculer();
     }
 
-    public void ajouterSortie(LigneSortie l) {
+    public void ajouterSortie(LigneCommande l) {
         sorties.add(l);
         totalQuantite += l.getQuantiteNette();
         montantFacture = montantFacture.add(l.getMontantHt() != null ? l.getMontantHt() : BigDecimal.ZERO);
@@ -42,7 +42,7 @@ public class FicheCaisseLigne {
     public void recalculer() {
         // Construction du résumé des produits sortis
         StringBuilder sb = new StringBuilder();
-        for (LigneSortie l : sorties) {
+        for (LigneCommande l : sorties) {
             if (sb.length() > 0) sb.append(", ");
             String nomProd = l.getProduit() != null ? l.getProduit().getLibelle() : "Produit";
             sb.append(nomProd).append(" (").append(l.getQuantiteNette()).append(")");
@@ -74,7 +74,7 @@ public class FicheCaisseLigne {
     public Client getClient() { return client; }
     public void setClient(Client client) { this.client = client; recalculer(); }
 
-    public List<LigneSortie> getSorties() { return sorties; }
+    public List<LigneCommande> getSorties() { return sorties; }
 
     public String getResumeSorties() { return resumeSorties; }
     public void setResumeSorties(String resumeSorties) { this.resumeSorties = resumeSorties; }

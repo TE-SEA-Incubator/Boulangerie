@@ -23,7 +23,7 @@
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/FicheCaisseLigne.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/FicheJournaliere.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/JournalAudit.java
-/home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/LigneSortie.java
+/home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/LigneCommande.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/Permission.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/Produit.java
 /home/ravel/Documents/Projet Te-sea/Boulangerie/gestion-boulangerie/src/main/java/com/boulangerie/model/Recu.java
