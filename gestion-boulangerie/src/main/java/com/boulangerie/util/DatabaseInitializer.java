@@ -99,6 +99,8 @@ public class DatabaseInitializer {
             try { st.execute("ALTER TABLE ligne_commande ADD COLUMN tarif_applicable DECIMAL(15,2) DEFAULT 0"); } catch (Exception ignored) {}
             try { st.execute("ALTER TABLE ligne_commande ADD COLUMN remise_pct DECIMAL(5,2) DEFAULT 0"); } catch (Exception ignored) {}
             try { st.execute("ALTER TABLE ligne_commande ADD COLUMN type_tarif VARCHAR(50) DEFAULT 'Standard'"); } catch (Exception ignored) {}
+            try { st.execute("ALTER TABLE ligne_commande ADD COLUMN modifie_par VARCHAR(100)"); } catch (Exception ignored) {}
+            try { st.execute("ALTER TABLE fiche_journaliere ADD COLUMN type_fiche VARCHAR(20) DEFAULT 'SORTIE'"); } catch (Exception ignored) {}
             try { st.execute("UPDATE ligne_commande SET tarif_applicable = prix_unitaire WHERE tarif_applicable IS NULL OR tarif_applicable = 0"); } catch (Exception ignored) {}
             try {
                 st.execute("""

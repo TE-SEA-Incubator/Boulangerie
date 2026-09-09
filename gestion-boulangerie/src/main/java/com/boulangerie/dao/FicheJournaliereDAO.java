@@ -18,12 +18,19 @@ public class FicheJournaliereDAO {
     private final DatabaseConnection db = DatabaseConnection.getInstance();
 
     // ── Générer numéro séquentiel ────────────────────────────────
-    public String genererNumero(LocalDate date) {
-        // Format: sortie jjmmaa
+    public String genererNumero(LocalDate date, String type) {
+        // Format: sortie jjmmaa ou caisse jjmmaa
+        String prefix = "sortie ";
+        if ("CAISSE".equalsIgnoreCase(type)) prefix = "caisse ";
+        
         String dd = String.format("%02d", date.getDayOfMonth());
         String mm = String.format("%02d", date.getMonthValue());
         String yy = String.valueOf(date.getYear()).substring(2);
-        return "sortie " + dd + mm + yy;
+        return prefix + dd + mm + yy;
+    }
+
+    public String genererNumero(LocalDate date) {
+        return genererNumero(date, "SORTIE");
     }
 
     // ── Lister par date ──────────────────────────────────────────
@@ -31,7 +38,7 @@ public class FicheJournaliereDAO {
         return findByFilters(date, date, null, null);
     }
 
-    public List<FicheJournaliere> findByFilters(LocalDate du, LocalDate au, String livreurId, String statut) {
+    public List<FicheJournaliere> findByFilters(LocalDate du, LocalDate au, String livreurId, String statut, String type) {
         List<FicheJournaliere> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder("""
             SELECT fj.*, u.id AS liv_id, u.nom_complet AS liv_nom
@@ -44,6 +51,7 @@ public class FicheJournaliereDAO {
         if (au != null) { sql.append(" AND fj.date_fiche <= ?"); params.add(Date.valueOf(au)); }
         if (livreurId != null) { sql.append(" AND fj.livreur_id=?"); params.add(livreurId); }
         if (statut != null)    { sql.append(" AND fj.statut=?"); params.add(statut); }
+        if (type != null)      { sql.append(" AND fj.type_fiche=?"); params.add(type); }
         sql.append(" ORDER BY fj.date_fiche DESC, fj.numero");
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql.toString())) {
@@ -54,6 +62,10 @@ public class FicheJournaliereDAO {
             log.error("findByFilters fiches", e);
         }
         return list;
+    }
+
+    public List<FicheJournaliere> findByFilters(LocalDate du, LocalDate au, String livreurId, String statut) {
+        return findByFilters(du, au, livreurId, statut, null);
     }
 
     public Optional<FicheJournaliere> findById(String id) {
@@ -81,8 +93,8 @@ public class FicheJournaliereDAO {
     // ── Créer fiche ──────────────────────────────────────────────
     public String save(FicheJournaliere fj) {
         String sql = """
-            INSERT INTO fiche_journaliere (id,numero,date_fiche,livreur_id,statut,cree_par)
-            VALUES (UUID(),?,?,?,?,?)
+            INSERT INTO fiche_journaliere (id,numero,date_fiche,livreur_id,statut,cree_par,type_fiche)
+            VALUES (UUID(),?,?,?,?,?,?)
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -91,6 +103,7 @@ public class FicheJournaliereDAO {
             ps.setString(3, fj.getLivreur() != null ? fj.getLivreur().getId() : null);
             ps.setString(4, toDbStatut(fj.getStatut()));
             ps.setString(5, fj.getCreePar());
+            ps.setString(6, fj.getTypeFiche());
             ps.executeUpdate();
             String id = findIdByNumero(fj.getNumero(), c);
             if (id != null) fj.setId(id);
@@ -133,8 +146,8 @@ public class FicheJournaliereDAO {
     public String saveLigne(LigneCommande l) {
         String sql = """
             INSERT INTO ligne_commande (id,fiche_id,client_id,produit_id,quantite_sortie,
-            quantite_retournee,prix_unitaire,tarif_applicable,type_tarif,remise_pct,montant_ht,motif_retour)
-            VALUES (UUID(),?,?,?,?,?,?,?,?,?,?,?)
+            quantite_retournee,prix_unitaire,tarif_applicable,type_tarif,remise_pct,montant_ht,motif_retour,modifie_par)
+            VALUES (UUID(),?,?,?,?,?,?,?,?,?,?,?,?)
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -151,6 +164,7 @@ public class FicheJournaliereDAO {
             ps.setBigDecimal(9, l.getRemisePct() != null ? l.getRemisePct() : BigDecimal.ZERO);
             ps.setBigDecimal(10, l.getMontantHt() != null ? l.getMontantHt() : BigDecimal.ZERO);
             ps.setString(11, l.getMotifRetour());
+            ps.setString(12, l.getModifiePar());
             ps.executeUpdate();
             return null;
         } catch (SQLException e) {
@@ -162,7 +176,7 @@ public class FicheJournaliereDAO {
     public void updateLigne(LigneCommande l) {
         String sql = """
             UPDATE ligne_commande SET quantite_sortie=?,quantite_retournee=?,
-            prix_unitaire=?,tarif_applicable=?,remise_pct=?,montant_ht=?,motif_retour=? WHERE id=?
+            prix_unitaire=?,tarif_applicable=?,remise_pct=?,montant_ht=?,motif_retour=?,modifie_par=? WHERE id=?
             """;
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -175,7 +189,8 @@ public class FicheJournaliereDAO {
             ps.setBigDecimal(5, l.getRemisePct() != null ? l.getRemisePct() : BigDecimal.ZERO);
             ps.setBigDecimal(6, l.getMontantHt() != null ? l.getMontantHt() : BigDecimal.ZERO);
             ps.setString(7, l.getMotifRetour());
-            ps.setString(8, l.getId());
+            ps.setString(8, l.getModifiePar());
+            ps.setString(9, l.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
             log.error("updateLigne", e);
@@ -227,6 +242,9 @@ public class FicheJournaliereDAO {
                 l.setRemisePct(rs.getBigDecimal("remise_pct"));
                 l.setMontantHt(rs.getBigDecimal("montant_ht"));
                 l.setMotifRetour(rs.getString("motif_retour"));
+                l.setModifiePar(rs.getString("modifie_par"));
+                Date df = rs.getDate("fj_date");
+                if (df != null) l.setDateSortie(df.toLocalDate());
 
                 Client cl = new Client();
                 cl.setId(rs.getString("cl_id"));
@@ -251,20 +269,16 @@ public class FicheJournaliereDAO {
         return list;
     }
 
-    public FicheJournaliere getOrCreateFicheJour(LocalDate date, String creePar) {
-        List<FicheJournaliere> fiches = findByFilters(date, date, null, null);
+    public FicheJournaliere getOrCreateFicheJour(LocalDate date, String type, String creePar) {
+        List<FicheJournaliere> fiches = findByFilters(date, date, null, null, type);
         if (!fiches.isEmpty()) {
             return findById(fiches.get(0).getId()).orElse(fiches.get(0));
         }
         FicheJournaliere f = new FicheJournaliere();
         f.setDateFiche(date);
-        f.setNumero(genererNumero(date));
-        // On ne rattache plus à un livreur spécifique au niveau de la fiche si c'est global
-        // On peut mettre un livreur par défaut ou null si la DB le permet (ici NOT NULL dans le schéma initial)
-        // Vérifions le schéma : livreur_id VARCHAR(36) NOT NULL. 
-        // Si c'est global, on devrait peut-être changer le schéma ou mettre l'admin.
+        f.setTypeFiche(type);
+        f.setNumero(genererNumero(date, type));
         
-        // Récupérer un utilisateur par défaut (admin ou le premier venu)
         Utilisateur defaultUser = new UtilisateurDAO().findAll().stream().findFirst().orElse(null);
         f.setLivreur(defaultUser);
         
@@ -273,6 +287,10 @@ public class FicheJournaliereDAO {
         String id = save(f);
         f.setId(id);
         return f;
+    }
+
+    public FicheJournaliere getOrCreateFicheJour(LocalDate date, String creePar) {
+        return getOrCreateFicheJour(date, "SORTIE", creePar);
     }
 
     public void recalculerTotauxFiche(String ficheId) {
@@ -426,6 +444,7 @@ public class FicheJournaliereDAO {
                 l.setRemisePct(rs.getBigDecimal("remise_pct"));
                 l.setMontantHt(rs.getBigDecimal("montant_ht"));
                 l.setMotifRetour(rs.getString("motif_retour"));
+                l.setModifiePar(rs.getString("modifie_par"));
                 Client cl = new Client();
                 cl.setId(rs.getString("cl_id")); cl.setCode(rs.getString("cl_code")); cl.setNom(rs.getString("cl_nom"));
                 l.setClient(cl);
@@ -450,6 +469,7 @@ public class FicheJournaliereDAO {
         FicheJournaliere fj = new FicheJournaliere();
         fj.setId(rs.getString("id"));
         fj.setNumero(rs.getString("numero"));
+        fj.setTypeFiche(rs.getString("type_fiche"));
         Date df = rs.getDate("date_fiche");
         if (df != null) fj.setDateFiche(df.toLocalDate());
         fj.setStatut(fromDbStatut(rs.getString("statut")));

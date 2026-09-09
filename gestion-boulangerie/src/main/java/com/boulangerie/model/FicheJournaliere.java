@@ -20,6 +20,7 @@ public class FicheJournaliere {
     private String creePar;
     private LocalDateTime dateCreation;
     private LocalDateTime dateCloture;
+    private String typeFiche = "SORTIE"; // SORTIE ou CAISSE
     private List<LigneCommande> lignes = new ArrayList<>();
 
     public FicheJournaliere() {
@@ -51,6 +52,8 @@ public class FicheJournaliere {
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
     public LocalDateTime getDateCloture() { return dateCloture; }
     public void setDateCloture(LocalDateTime dateCloture) { this.dateCloture = dateCloture; }
+    public String getTypeFiche() { return typeFiche; }
+    public void setTypeFiche(String typeFiche) { this.typeFiche = typeFiche; }
     public List<LigneCommande> getLignes() { return lignes; }
     public void setLignes(List<LigneCommande> lignes) { this.lignes = lignes; }
 

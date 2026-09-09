@@ -15,7 +15,6 @@ com/boulangerie/ui/panels/AuditPanel$1.class
 com/boulangerie/ui/dialogs/AvoirDialog$1.class
 com/boulangerie/model/Facture$Statut.class
 com/boulangerie/ui/panels/ClientsPanel$3.class
-com/boulangerie/ui/fx/SortiesFxPanel$3.class
 com/boulangerie/ui/MainFrame.class
 com/boulangerie/ui/panels/RecouvrementPanel.class
 com/boulangerie/model/Recu.class
@@ -92,7 +91,6 @@ com/boulangerie/ui/panels/SortiesPanel.class
 com/boulangerie/service/TarifService.class
 com/boulangerie/model/Permission.class
 com/boulangerie/model/Avoir.class
-com/boulangerie/ui/fx/SortiesFxPanel$5.class
 com/boulangerie/ui/panels/ProduitsPanel$1.class
 com/boulangerie/ui/dialogs/SaisieDialog$1.class
 com/boulangerie/model/Produit.class
@@ -124,7 +122,6 @@ com/boulangerie/ui/fx/CaisseFxPanel.class
 com/boulangerie/ui/fx/ProduitsFxPanel$2.class
 com/boulangerie/ui/panels/CaissePanel$2.class
 com/boulangerie/service/FacturationService.class
-com/boulangerie/ui/fx/SortiesFxPanel$4.class
 com/boulangerie/ui/components/RoundedButton.class
 com/boulangerie/dao/TarifClientDAO.class
 com/boulangerie/model/Client.class
@@ -157,10 +154,10 @@ com/boulangerie/ui/dialogs/SaisieDialog.class
 com/boulangerie/ui/fx/ParametresFxPanel.class
 com/boulangerie/ui/components/StyledTable$1.class
 com/boulangerie/ui/MainFrame$1.class
-com/boulangerie/ui/fx/SortiesFxPanel$6.class
 com/boulangerie/ui/components/SearchField$1.class
 com/boulangerie/model/JournalAudit.class
 com/boulangerie/ui/panels/ClientsPanel$6.class
+com/boulangerie/ui/fx/CaisseFxPanel$CaisseRowData.class
 com/boulangerie/service/SessionService.class
 com/boulangerie/ui/dialogs/AvoirDialog.class
 com/boulangerie/ui/MainFrame$2.class

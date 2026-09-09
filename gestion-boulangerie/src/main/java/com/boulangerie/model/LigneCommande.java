@@ -2,6 +2,7 @@ package com.boulangerie.model;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 
 public class LigneCommande {
     private String id;
@@ -15,6 +16,8 @@ public class LigneCommande {
     private BigDecimal remisePct;    // pourcentage de remise
     private BigDecimal montantHt;
     private String motifRetour;
+    private String modifiePar;
+    private LocalDate dateSortie; // Pour consultation simplifiée
 
     public LigneCommande() {
         this.quantiteSortie    = 0;
@@ -45,6 +48,10 @@ public class LigneCommande {
     public void setMontantHt(BigDecimal montantHt) { this.montantHt = montantHt; }
     public String getMotifRetour() { return motifRetour; }
     public void setMotifRetour(String motifRetour) { this.motifRetour = motifRetour; }
+    public String getModifiePar() { return modifiePar; }
+    public void setModifiePar(String modifiePar) { this.modifiePar = modifiePar; }
+    public LocalDate getDateSortie() { return dateSortie; }
+    public void setDateSortie(LocalDate dateSortie) { this.dateSortie = dateSortie; }
     public BigDecimal getPrixUnitaire() { return tarifApplicable != null ? tarifApplicable : (produit != null ? produit.getPrixUnitaire() : BigDecimal.ZERO); }
 
     public int getQuantiteNette() { return quantiteSortie - quantiteRetournee; }

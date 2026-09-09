@@ -1,1 +1,3 @@
-pur la refonte sache que on doit modifie la parie caisse labas la liste complet des client sont liste avec les somme du jour recu par ceux ci et leur dette en sachant que la dette s'acummule et se reduit au fil des jour en fonction de si le client la rembourese, donc quand on clique sur un client on arrive sur une autre fennetre ou cette fois ci seront liste les differentes datte de sortie avec seulement le nom du cline ta l'interier et avec cela on pourra voir les commande qu'il a eu a effectuer et ces dette
+---  
+You:  
+ameliore le css des page sortie et caisse sertain element sont mal visible ou mal designer

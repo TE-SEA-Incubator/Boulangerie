@@ -1,5 +1,5 @@
 -- ============================================================
---  SCHEMA SQL — Gestion Boulangerie v2.0 (Refonte)
+--  SCHEMA SQL — Gestion Boulangerie v3.0 (Refonte)
 --  Base : MySQL 8.x
 --  Encodage : UTF-8
 -- ============================================================
@@ -57,11 +57,12 @@ CREATE TABLE IF NOT EXISTS famille (
 
 CREATE TABLE IF NOT EXISTS produit (
     id              VARCHAR(36)    NOT NULL DEFAULT (UUID()) PRIMARY KEY,
-    code            VARCHAR(20)    NOT NULL UNIQUE, -- Généré automatiquement dans l'application
+    code            VARCHAR(20)    NOT NULL UNIQUE,
     libelle         VARCHAR(200)   NOT NULL,
     famille_id      VARCHAR(36),
     unite           VARCHAR(20)    NOT NULL DEFAULT 'Pièce',
     prix_vente      DECIMAL(15,2)  NOT NULL DEFAULT 0,
+    prix_unitaire   DECIMAL(15,2)  NOT NULL DEFAULT 0,
     statut          ENUM('Actif','Inactif') NOT NULL DEFAULT 'Actif',
     seuil_alerte    INT            NOT NULL DEFAULT 0,
     description     TEXT,
@@ -70,12 +71,12 @@ CREATE TABLE IF NOT EXISTS produit (
 );
 
 -- ─────────────────────────────────────────────
---  CLIENTS & LIVREURS (Entité Unique)
+--  CLIENTS & LIVREURS
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS categorie_client (
     id  VARCHAR(36)  NOT NULL DEFAULT (UUID()) PRIMARY KEY,
     nom VARCHAR(50)  NOT NULL UNIQUE,
-    taux_remise_pct DECIMAL(5,2) NOT NULL DEFAULT 0
+    pourcentage_remise DECIMAL(5,2) DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS client (
@@ -90,8 +91,8 @@ CREATE TABLE IF NOT EXISTS client (
     est_anonyme        TINYINT(1)     NOT NULL DEFAULT 0,
     type_client        ENUM('Nominatif','Anonyme') NOT NULL DEFAULT 'Nominatif',
     solde_actuel       DECIMAL(15,2)  NOT NULL DEFAULT 0,
-    livreur_rattache   VARCHAR(36),
     solde_precedent    DECIMAL(15,2)  NOT NULL DEFAULT 0,
+    livreur_rattache   VARCHAR(36),
     statut             ENUM('Actif','Bloqué','Inactif') NOT NULL DEFAULT 'Actif',
     notes              TEXT,
     date_creation      DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -100,13 +101,14 @@ CREATE TABLE IF NOT EXISTS client (
 );
 
 -- ─────────────────────────────────────────────
---  SORTIES & RETOURS
+--  SORTIES & CAISSES (Fiches Journalières)
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS fiche_journaliere (
     id              VARCHAR(36)  NOT NULL DEFAULT (UUID()) PRIMARY KEY,
     numero          VARCHAR(20)  NOT NULL UNIQUE,
     date_fiche      DATE         NOT NULL,
-    livreur_id      VARCHAR(36)  NOT NULL, -- FK utilisateur
+    type_fiche      VARCHAR(20)  NOT NULL DEFAULT 'SORTIE', -- SORTIE ou CAISSE
+    livreur_id      VARCHAR(36)  NOT NULL,
     statut          ENUM('Brouillon','En cours','Complétée','Clôturée') NOT NULL DEFAULT 'Brouillon',
     total_sorties   DECIMAL(15,2) NOT NULL DEFAULT 0,
     total_retours   DECIMAL(15,2) NOT NULL DEFAULT 0,
@@ -118,7 +120,7 @@ CREATE TABLE IF NOT EXISTS fiche_journaliere (
     FOREIGN KEY (cree_par) REFERENCES utilisateur(id)
 );
 
-CREATE TABLE IF NOT EXISTS ligne_sortie (
+CREATE TABLE IF NOT EXISTS ligne_commande (
     id                  VARCHAR(36)    NOT NULL DEFAULT (UUID()) PRIMARY KEY,
     fiche_id            VARCHAR(36)    NOT NULL,
     client_id           VARCHAR(36)    NOT NULL,
@@ -127,20 +129,39 @@ CREATE TABLE IF NOT EXISTS ligne_sortie (
     quantite_retournee  INT            NOT NULL DEFAULT 0,
     quantite_nette      INT            GENERATED ALWAYS AS (quantite_sortie - quantite_retournee) STORED,
     prix_unitaire       DECIMAL(15,2)  NOT NULL,
+    tarif_applicable    DECIMAL(15,2)  DEFAULT 0,
+    remise_pct          DECIMAL(5,2)   DEFAULT 0,
+    type_tarif          VARCHAR(50)    DEFAULT 'Standard',
     montant_ht          DECIMAL(15,2)  NOT NULL DEFAULT 0,
     motif_retour        VARCHAR(300),
+    modifie_par         VARCHAR(100),
     FOREIGN KEY (fiche_id) REFERENCES fiche_journaliere(id),
     FOREIGN KEY (client_id) REFERENCES client(id),
     FOREIGN KEY (produit_id) REFERENCES produit(id)
 );
 
 -- ─────────────────────────────────────────────
---  CAISSE & RÈGLEMENTS
+--  TARIFS SPÉCIFIQUES CLIENTS
+-- ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS tarif_client (
+    id          VARCHAR(36)    NOT NULL DEFAULT (UUID()) PRIMARY KEY,
+    client_id   VARCHAR(36)    NOT NULL,
+    produit_id  VARCHAR(36)    NOT NULL,
+    prix        DECIMAL(15,2)  NOT NULL,
+    date_debut  DATE           NOT NULL,
+    date_fin    DATE,
+    actif       TINYINT(1)     NOT NULL DEFAULT 1,
+    FOREIGN KEY (client_id)  REFERENCES client(id),
+    FOREIGN KEY (produit_id) REFERENCES produit(id)
+);
+
+-- ─────────────────────────────────────────────
+--  VERSEMENTS & ENCAISSEMENTS
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS versement (
     id                  VARCHAR(36)    NOT NULL DEFAULT (UUID()) PRIMARY KEY,
     numero              VARCHAR(20)    NOT NULL UNIQUE,
-    fiche_id            VARCHAR(36)    NOT NULL, -- Remplacant de facture_id
+    fiche_id            VARCHAR(36),   -- Référence à la fiche journalière (SORTIE ou CAISSE)
     livreur_id          VARCHAR(36),
     client_id           VARCHAR(36)    NOT NULL,
     montant_attendu     DECIMAL(15,2)  NOT NULL,
@@ -194,7 +215,7 @@ CREATE TABLE IF NOT EXISTS journal_audit (
 -- ─────────────────────────────────────────────
 
 -- Catégories clients
-INSERT IGNORE INTO categorie_client (id, nom, taux_remise_pct) VALUES
+INSERT IGNORE INTO categorie_client (id, nom, pourcentage_remise) VALUES
   ('cat-ext',   'Externe', 0),
   ('cat-int',   'Interne', 10),
   ('cat-carre', 'Carrefour', 5);
@@ -202,13 +223,12 @@ INSERT IGNORE INTO categorie_client (id, nom, taux_remise_pct) VALUES
 -- Rôles
 INSERT IGNORE INTO role (id, nom, description) VALUES
   ('role-admin', 'ADMIN',      'Administrateur / Manager — accès complet'),
-  ('role-compta', 'COMPTABLE', 'Comptable — suivi financier'),
-  ('role-caissier', 'CAISSIER','Caissier — encaissements'),
-  ('role-livreur', 'LIVREUR',  'Livreur — sorties/retours');
+  ('role-compta', 'COMPTABLE', 'Comptable — gestion des sorties'),
+  ('role-caissier', 'CAISSIER','Caissier — gestion financière'),
+  ('role-livreur', 'LIVREUR',  'Livreur — livreur de pain');
 
 -- Utilisateur ADMIN par défaut (mot de passe : Admin@2025)
 INSERT IGNORE INTO utilisateur (id, login, mot_de_passe, nom_complet, role_id, actif) VALUES
   ('usr-admin', 'admin',
    '$2a$10$ihaTVCkHqHSR.y7Et6w/TusKZ2XCbK8.he15MEDNeebOJSRlRQEGa',
    'Administrateur Système', 'role-admin', 1);
-

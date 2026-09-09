@@ -1435,3 +1435,46 @@ java.sql.SQLSyntaxErrorException: Unknown column 'tarif_applicable' in 'field li
 2026-09-08 17:20:43 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Migrations automatiques appliquées avec succès.
 2026-09-08 17:20:45 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
 2026-09-08 17:20:58 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-09 09:00:05 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-09 09:00:05 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — vérification des migrations nécessaires...
+2026-09-09 09:00:05 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Migrations automatiques appliquées avec succès.
+2026-09-09 09:00:07 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-09 09:00:15 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-09 09:00:19 [fx-panel-worker] ERROR c.b.dao.FicheJournaliereDAO - save fiche
+java.sql.SQLIntegrityConstraintViolationException: Duplicate entry 'sortie 090926' for key 'fiche_journaliere.numero'
+	at com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:118)
+	at com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:122)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:912)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1054)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdateInternal(ClientPreparedStatement.java:1003)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeLargeUpdate(ClientPreparedStatement.java:1312)
+	at com.mysql.cj.jdbc.ClientPreparedStatement.executeUpdate(ClientPreparedStatement.java:988)
+	at com.boulangerie.dao.FicheJournaliereDAO.save(FicheJournaliereDAO.java:94)
+	at com.boulangerie.dao.FicheJournaliereDAO.getOrCreateFicheJour(FicheJournaliereDAO.java:273)
+	at com.boulangerie.ui.fx.SortiesFxPanel.lambda$chargerOuCreerFiche$7(SortiesFxPanel.java:220)
+	at com.boulangerie.ui.fx.FxPanelBase.lambda$runAsync$3(FxPanelBase.java:211)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+2026-09-09 10:00:51 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-09 10:00:51 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — vérification des migrations nécessaires...
+2026-09-09 10:00:52 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Migrations automatiques appliquées avec succès.
+2026-09-09 10:00:55 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-09 10:02:55 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-09 10:20:48 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-09 10:20:48 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — vérification des migrations nécessaires...
+2026-09-09 10:20:48 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Migrations automatiques appliquées avec succès.
+2026-09-09 10:20:51 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-09 10:21:01 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-09 10:43:54 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-09 10:43:55 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — vérification des migrations nécessaires...
+2026-09-09 10:43:55 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Migrations automatiques appliquées avec succès.
+2026-09-09 10:43:58 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-09 10:44:15 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)
+2026-09-09 11:04:24 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Connexion MySQL établie.
+2026-09-09 11:04:24 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Tables déjà présentes — vérification des migrations nécessaires...
+2026-09-09 11:04:24 [JavaFX Application Thread] INFO  c.b.util.DatabaseInitializer - Migrations automatiques appliquées avec succès.
+2026-09-09 11:04:26 [JavaFX Application Thread] INFO  com.boulangerie.MainApp - Application Gestion Boulangerie démarrée.
+2026-09-09 11:04:34 [login-thread] INFO  com.boulangerie.service.AuthService - Connexion réussie: admin (ADMIN)

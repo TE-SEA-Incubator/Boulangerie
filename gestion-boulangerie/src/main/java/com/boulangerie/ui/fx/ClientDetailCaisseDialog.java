@@ -108,7 +108,7 @@ public class ClientDetailCaisseDialog extends Dialog<Boolean> {
         VBox rightBox = new VBox(10);
         rightBox.setPadding(new Insets(10));
 
-        Label lblCmdTitle = new Label("Commandes / Sorties de la date");
+        Label lblCmdTitle = new Label("Sorties de la date");
         lblCmdTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #1F3A5F;");
 
         tableCommandes = new TableView<>();
@@ -170,7 +170,7 @@ public class ClientDetailCaisseDialog extends Dialog<Boolean> {
         dateSummaryBox.setPadding(new Insets(8, 12, 8, 12));
         dateSummaryBox.setStyle("-fx-background-color: #F4F6FA; -fx-border-color: #DADCE0; -fx-border-radius: 6; -fx-background-radius: 6;");
 
-        lblTotalSortiesJour = new Label("Commandes : 0 FCFA");
+        lblTotalSortiesJour = new Label("Sorties : 0 FCFA");
         lblTotalSortiesJour.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
 
         lblTotalVersesJour = new Label("Versé : 0 FCFA");
@@ -232,7 +232,7 @@ public class ClientDetailCaisseDialog extends Dialog<Boolean> {
         BigDecimal totVers = vers.stream().map(Versement::getMontantRemis).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal diff = totCmd.subtract(totVers);
 
-        lblTotalSortiesJour.setText("Commandes du " + FormatUtil.date(date) + " : " + FormatUtil.montant(totCmd) + " FCFA");
+        lblTotalSortiesJour.setText("Sorties du " + FormatUtil.date(date) + " : " + FormatUtil.montant(totCmd) + " FCFA");
         lblTotalVersesJour.setText("Total Versé : " + FormatUtil.montant(totVers) + " FCFA");
         lblResteJour.setText("Solde journée : " + FormatUtil.montant(diff) + " FCFA");
         lblResteJour.setStyle("-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: "

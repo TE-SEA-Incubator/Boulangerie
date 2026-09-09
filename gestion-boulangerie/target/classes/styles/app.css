@@ -425,13 +425,13 @@
     -fx-table-cell-border-color: #000000;
 }
 .matrice-excel-table .column-header-background {
-    -fx-background-color: white;
+    -fx-background-color: #F1F3F4;
     -fx-border-color: #000000;
     -fx-border-width: 0 0 1.5px 0;
 }
 .matrice-excel-table .column-header,
 .matrice-excel-table .nested-column-header {
-    -fx-background-color: white;
+    -fx-background-color: #F1F3F4;
     -fx-border-color: #000000;
     -fx-border-width: 0.5px;
     -fx-alignment: CENTER;
@@ -439,7 +439,7 @@
 .matrice-excel-table .column-header .label,
 .matrice-excel-table .nested-column-header .label {
     -fx-font-weight: bold;
-    -fx-text-fill: #000000;
+    -fx-text-fill: #1F3A5F;
     -fx-font-size: 11px;
     -fx-alignment: CENTER;
     -fx-text-alignment: CENTER;
@@ -447,28 +447,43 @@
 .matrice-excel-table .table-cell {
     -fx-border-color: #000000;
     -fx-border-width: 0.5px;
-    -fx-padding: 2 4;
+    -fx-padding: 0 4;
     -fx-font-size: 12px;
+    -fx-alignment: CENTER-RIGHT;
 }
 .matrice-excel-table .table-row-cell:filled {
     -fx-background-color: white;
 }
 .matrice-excel-table .table-row-cell:filled:selected {
-    -fx-background-color: #E8F0FE;
+    -fx-background-color: #FFF9C4; /* Jaune très clair pour sélection sans masquer les couleurs de colonnes */
 }
 .matrice-excel-table .table-row-cell:hover {
-    -fx-background-color: #F8F9FA;
+    -fx-background-color: #F5F5F5;
 }
+
+/* Classes spécifiques pour colonnes matrice */
+.col-nom { -fx-alignment: CENTER-LEFT; -fx-font-weight: bold; -fx-padding: 0 8; }
+.col-facture { -fx-background-color: #E8F5E9; -fx-text-fill: #2E7D32; -fx-font-weight: bold; }
+.col-manquant { -fx-background-color: #FFF3E0; -fx-text-fill: #E65100; -fx-font-weight: bold; }
+.col-total-solde { -fx-background-color: #E3F2FD; -fx-text-fill: #1565C0; -fx-font-weight: bold; }
+.col-versement { -fx-background-color: #F1F8E9; -fx-text-fill: #33691E; -fx-font-weight: bold; }
+.col-reste { -fx-background-color: #FFEBEE; -fx-text-fill: #C62828; -fx-font-weight: bold; }
+.col-visa { -fx-font-size: 10px; -fx-text-fill: #546E7A; -fx-alignment: CENTER; -fx-font-style: italic; }
+
 .matrice-cell-input {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
-    -fx-padding: 2;
+    -fx-padding: 1 2;
     -fx-font-size: 12px;
     -fx-font-weight: bold;
+    -fx-alignment: CENTER-RIGHT;
+    -fx-text-fill: inherit;
 }
 .matrice-cell-input:focused {
-    -fx-background-color: #FFFFFF;
+    -fx-background-color: white;
     -fx-border-color: #1A73E8;
-    -fx-border-width: 1.5px;
+    -fx-border-width: 1px;
+    -fx-text-fill: black;
 }
+.qte-input { -fx-alignment: CENTER; }
 

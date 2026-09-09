@@ -55,7 +55,7 @@ public class MainWindow {
     public static final String DASHBOARD    = "DASHBOARD";
     public static final String PRODUITS     = "PRODUITS";
     public static final String CLIENTS      = "CLIENTS";
-    public static final String SORTIES      = "COMMANDES";
+    public static final String SORTIES      = "SORTIES";
     public static final String FACTURATION  = "FACTURATION";
     public static final String CAISSE       = "CAISSE";
     public static final String RECOUVREMENT = "RECOUVREMENT";
@@ -68,7 +68,7 @@ public class MainWindow {
         new NavItem("Tableau de bord", DASHBOARD, null, BootstrapIcons.GRID_1X2_FILL),
         new NavItem("Produits", PRODUITS, "PRODUIT_READ", BootstrapIcons.BOX_SEAM),
         new NavItem("Clients", CLIENTS, "CLIENT_READ", BootstrapIcons.PEOPLE_FILL),
-        new NavItem("Commandes", SORTIES, "SORTIE_READ", BootstrapIcons.JOURNAL_TEXT),
+        new NavItem("SORTIES", SORTIES, "SORTIE_READ", BootstrapIcons.JOURNAL_TEXT),
         new NavItem("Caisse", CAISSE, "CAISSE_READ", BootstrapIcons.CASH_STACK),
         new NavItem("Recouvrement", RECOUVREMENT, "RECOUVREMENT_READ", BootstrapIcons.BAR_CHART_FILL),
         new NavItem("Utilisateurs", UTILISATEURS, "USER_WRITE", BootstrapIcons.PEOPLE_FILL),
@@ -383,18 +383,22 @@ public class MainWindow {
     public Stage          getStage()   { return stage; }
 
     private List<NavItem> getAvailableNavItems() {
-        boolean isCaissier = session.getUtilisateur() != null
-            && session.getUtilisateur().getRole() != null
-            && "CAISSIER".equalsIgnoreCase(session.getUtilisateur().getRole().getNom());
+        if (session.getUtilisateur() == null || session.getUtilisateur().getRole() == null) return new ArrayList<>();
+        
+        String role = session.getUtilisateur().getRole().getNom().toUpperCase();
+        boolean isCaissier = "CAISSIER".equals(role);
+        boolean isComptable = "COMPTABLE".equals(role);
+        boolean isAdmin = session.isAdmin();
 
         List<NavItem> items = new ArrayList<>();
         for (NavItem item : NAV_ITEMS) {
             if (isCaissier) {
-                // Pour la caissière, l'interface accessible est Caisse
-                if (CAISSE.equals(item.key())) {
-                    items.add(item);
-                }
-            } else if (item.permissionCode() == null || session.hasPermission(item.permissionCode()) || session.isAdmin()) {
+                // Pour le caissier, l'interface accessible est UNIQUEMENT Caisse
+                if (CAISSE.equals(item.key())) items.add(item);
+            } else if (isComptable) {
+                // Pour le comptable, accès aux Sorties et Rapports
+                if (SORTIES.equals(item.key()) || RAPPORTS.equals(item.key()) || DASHBOARD.equals(item.key())) items.add(item);
+            } else if (item.permissionCode() == null || session.hasPermission(item.permissionCode()) || isAdmin) {
                 items.add(item);
             }
         }
@@ -420,11 +424,16 @@ public class MainWindow {
         }
     }
 
-    public void navigateToCommandes() {
+    public void navigateToSorties() {
         navigate(SORTIES);
         if (navButtons.containsKey(SORTIES)) {
             setActiveNavBtn(navButtons.get(SORTIES));
         }
+    }
+
+    @Deprecated
+    public void navigateToCommandes() {
+        navigateToSorties();
     }
 
     private record NavItem(String label, String key, String permissionCode, BootstrapIcons icon) {}
